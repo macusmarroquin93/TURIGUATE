@@ -6,89 +6,26 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.path
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.turiguate.R
 import com.example.turiguate.ui.components.CategoryChip
-
-// Icono personalizado de Sol para Tema Claro
-val SunIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "Sun",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).path(fill = SolidColor(Color(0xFFFFC107))) {
-        moveTo(12f, 7f)
-        curveTo(9.24f, 7f, 7f, 9.24f, 7f, 12f)
-        curveTo(7f, 14.76f, 9.24f, 17f, 12f, 17f)
-        curveTo(14.76f, 17f, 17f, 14.76f, 17f, 12f)
-        curveTo(17f, 9.24f, 14.76f, 7f, 12f, 7f)
-        close()
-        moveTo(12f, 2f)
-        lineTo(12f, 4f)
-        moveTo(12f, 20f)
-        lineTo(12f, 22f)
-        moveTo(4.22f, 4.22f)
-        lineTo(5.64f, 5.64f)
-        moveTo(18.36f, 18.36f)
-        lineTo(19.78f, 19.78f)
-        moveTo(2f, 12f)
-        lineTo(4f, 12f)
-        moveTo(20f, 12f)
-        lineTo(22f, 12f)
-        moveTo(4.22f, 19.78f)
-        lineTo(5.64f, 18.36f)
-        moveTo(18.36f, 5.64f)
-        lineTo(19.78f, 4.22f)
-    }.build()
-}
-
-// Icono personalizado de Luna para Tema Oscuro
-val MoonIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "Moon",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).path(fill = SolidColor(Color(0xFF90CAF9))) {
-        moveTo(12.3f, 2f)
-        curveTo(6.97f, 2f, 2.65f, 6.32f, 2.65f, 11.65f)
-        curveTo(2.65f, 17f, 6.97f, 21.3f, 12.3f, 21.3f)
-        curveTo(15.93f, 21.3f, 19.1f, 19.3f, 20.8f, 16.3f)
-        curveTo(14.5f, 16.3f, 9.7f, 11.5f, 9.7f, 5.2f)
-        curveTo(9.7f, 4.05f, 9.92f, 2.98f, 10.33f, 2f)
-        curveTo(10.97f, 2f, 11.63f, 2f, 12.3f, 2f)
-        close()
-    }.build()
-}
 
 /**
  * Pantalla Principal: Planifica tu viaje.
- * Incluye acceso al Generador de Itinerarios, Catálogo de Destinos y alternador de Tema Claro/Oscuro.
+ * Implementa el wireframe solicitado siguiendo los estándares de Material 3.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun HomeScreen(
-    onGenerateClick: () -> Unit,
-    onCatalogClick: () -> Unit = {},
-    isDarkTheme: Boolean = false,
-    onToggleTheme: () -> Unit = {}
-) {
+fun HomeScreen() {
+    // Estados locales para la interactividad
     var days by remember { mutableIntStateOf(5) }
     var selectedBudget by remember { mutableStateOf("Medio") }
     val selectedInterests = remember { mutableStateListOf("Cultura", "Gastronomía", "Historia") }
@@ -111,14 +48,6 @@ fun HomeScreen(
                         )
                     }
                 },
-                actions = {
-                    IconButton(onClick = onToggleTheme) {
-                        Icon(
-                            imageVector = if (isDarkTheme) SunIcon else MoonIcon,
-                            contentDescription = if (isDarkTheme) "Cambiar a Tema Claro" else "Cambiar a Tema Oscuro"
-                        )
-                    }
-                },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
@@ -129,10 +58,11 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = 24.dp) // Alineación según wireframe
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
+            // Cabecera
             Column(modifier = Modifier.padding(top = 16.dp)) {
                 Text(
                     text = "Planifica tu viaje",
@@ -143,11 +73,11 @@ fun HomeScreen(
                 Text(
                     text = "Dinos qué buscas y crearemos un itinerario a tu medida en segundos.",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = Color.Gray
                 )
             }
 
-            // Sección: Días
+            // Sección: Días de viaje
             Column {
                 Text(
                     text = "¿Cuántos días vas a viajar?",
@@ -189,7 +119,7 @@ fun HomeScreen(
             // Sección: Intereses
             Column {
                 Text(
-                    text = stringResource(R.string.cu_les_son_tus_intereses),
+                    text = "¿Cuáles son tus intereses?",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -220,61 +150,35 @@ fun HomeScreen(
                 }
             }
 
-            // Acciones principales
-            Column(
-                modifier = Modifier.padding(bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+            // Botón de acción
+            Button(
+                onClick = { /* Acción de generar */ },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .padding(bottom = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
             ) {
-                // Botón: Generar itinerario
-                Button(
-                    onClick = onGenerateClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "Generar itinerario",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
                     )
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            "Generar itinerario",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
-                    }
-                }
-
-                // Botón: Explorar Catálogo
-                OutlinedButton(
-                    onClick = onCatalogClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Default.Place,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            "Explorar Catálogo Turístico",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(Icons.Default.ArrowForward, contentDescription = null)
                 }
             }
         }
     }
 }
 
+/**
+ * Componente interno para el selector de días (Stepper).
+ */
 @Composable
 fun DayStepper(
     count: Int,
@@ -293,9 +197,15 @@ fun DayStepper(
         ) {
             IconButton(
                 onClick = onDecrement,
-                modifier = Modifier.background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
+                modifier = Modifier.background(Color.White, RoundedCornerShape(12.dp))
             ) {
-                Box(modifier = Modifier.size(24.dp), contentAlignment = Alignment.Center) {
+                // Se reemplaza Icons.Default.Remove con una implementación manual (Box) para evitar el error
+                // java.lang.NoClassDefFoundError: androidx/compose/material/icons/filled/RemoveKt en el Preview.
+                // Esto sucede porque 'Remove' está en la librería extendida, que a veces falla al cargar en el IDE.
+                Box(
+                    modifier = Modifier.size(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
                     Box(
                         modifier = Modifier
                             .width(14.dp)
@@ -304,7 +214,7 @@ fun DayStepper(
                     )
                 }
             }
-
+            
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = count.toString(),
@@ -322,12 +232,9 @@ fun DayStepper(
 
             IconButton(
                 onClick = onIncrement,
-                modifier = Modifier.background(
-                    MaterialTheme.colorScheme.primary,
-                    RoundedCornerShape(12.dp)
-                )
+                modifier = Modifier.background(MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Más", tint = MaterialTheme.colorScheme.onPrimary)
+                Icon(Icons.Default.Add, contentDescription = "Más", tint = Color.White)
             }
         }
     }
@@ -337,6 +244,6 @@ fun DayStepper(
 @Composable
 fun HomeScreenPreview() {
     MaterialTheme {
-        HomeScreen(onGenerateClick = {}, onCatalogClick = {})
+        HomeScreen()
     }
 }
