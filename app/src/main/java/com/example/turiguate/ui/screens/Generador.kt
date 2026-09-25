@@ -3,6 +3,7 @@ package com.example.turiguate.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -10,7 +11,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.turiguate.model.ItineraryItem
@@ -24,7 +24,8 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Generador(
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onDestinationClick: (Int) -> Unit = {}
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -99,6 +100,7 @@ fun Generador(
                     ItineraryCard(
                         item = item,
                         onClick = { destinationName ->
+                            onDestinationClick(item.id)
                             scope.launch {
                                 snackbarHostState.showSnackbar("$destinationName seleccionado")
                             }
@@ -113,7 +115,7 @@ fun Generador(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.secondary
                         )
