@@ -70,7 +70,7 @@ fun DetailScreen(
                         .height(280.dp)
                 ) {
                     AsyncImage(
-                        model = destination.imageUrl,
+                        model = destination.imageRes,
                         contentDescription = "Imagen de ${destination.name}",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,

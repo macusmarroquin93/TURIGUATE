@@ -8,6 +8,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,6 +27,8 @@ import com.example.turiguate.ui.components.CategoryChip
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun HomeScreen(
+    isDarkTheme: Boolean = false,
+    onToggleTheme: () -> Unit = {},
     onGenerateItineraryClick: (days: Int, budget: String) -> Unit = { _, _ -> }
 ) {
     // Estados locales para la interactividad
@@ -47,6 +51,14 @@ fun HomeScreen(
                         Text(
                             "Planifica tu viaje",
                             style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onToggleTheme) {
+                        Icon(
+                            imageVector = if (isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
+                            contentDescription = if (isDarkTheme) "Cambiar a modo claro" else "Cambiar a modo oscuro"
                         )
                     }
                 },

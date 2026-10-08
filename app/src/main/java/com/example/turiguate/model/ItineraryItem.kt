@@ -1,5 +1,7 @@
 package com.example.turiguate.model
 
+import androidx.annotation.DrawableRes
+
 /**
  * Data class inmutable que representa un destino en el itinerario.
  * Utiliza 'val' para todas las propiedades para asegurar la inmutabilidad.
@@ -13,5 +15,5 @@ data class ItineraryItem(
     val hotel: String,
     val transport: String,
     val price: String,
-    val imageUrl: String
+    @get:DrawableRes val imageRes: Int
 )

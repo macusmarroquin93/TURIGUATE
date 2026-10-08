@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -41,15 +42,24 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            TURIGUATETheme {
-                MainApp()
+            val systemInDark = isSystemInDarkTheme()
+            var isDarkTheme by remember { mutableStateOf(systemInDark) }
+
+            TURIGUATETheme(darkTheme = isDarkTheme) {
+                MainApp(
+                    isDarkTheme = isDarkTheme,
+                    onToggleTheme = { isDarkTheme = !isDarkTheme }
+                )
             }
         }
     }
 }
 
 @Composable
-fun MainApp() {
+fun MainApp(
+    isDarkTheme: Boolean,
+    onToggleTheme: () -> Unit
+) {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Home) }
     var selectedDays by remember { mutableIntStateOf(5) }
     var selectedBudget by remember { mutableStateOf("Medio") }
@@ -93,6 +103,8 @@ fun MainApp() {
             when (val screen = currentScreen) {
                 is Screen.Home -> {
                     HomeScreen(
+                        isDarkTheme = isDarkTheme,
+                        onToggleTheme = onToggleTheme,
                         onGenerateItineraryClick = { days, budget ->
                             selectedDays = days
                             selectedBudget = budget
@@ -102,6 +114,8 @@ fun MainApp() {
                 }
                 is Screen.Catalog -> {
                     CatalogScreen(
+                        isDarkTheme = isDarkTheme,
+                        onToggleTheme = onToggleTheme,
                         onBackClick = { currentScreen = Screen.Home },
                         onDestinationClick = { destinationId ->
                             currentScreen = Screen.Detail(destinationId, previousScreen = Screen.Catalog)
@@ -115,6 +129,8 @@ fun MainApp() {
                     Generador(
                         days = screen.days,
                         budget = screen.budget,
+                        isDarkTheme = isDarkTheme,
+                        onToggleTheme = onToggleTheme,
                         onBackClick = { currentScreen = Screen.Home },
                         onDestinationClick = { destinationId ->
                             currentScreen = Screen.Detail(destinationId, previousScreen = screen)

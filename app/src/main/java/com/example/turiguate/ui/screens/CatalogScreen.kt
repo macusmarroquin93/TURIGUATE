@@ -9,6 +9,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,6 +29,8 @@ import com.example.turiguate.ui.components.DestinationCard
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CatalogScreen(
+    isDarkTheme: Boolean = false,
+    onToggleTheme: () -> Unit = {},
     onBackClick: () -> Unit,
     onDestinationClick: (Int) -> Unit,
     onViewItineraryClick: () -> Unit = {}
@@ -55,6 +59,12 @@ fun CatalogScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onToggleTheme) {
+                        Icon(
+                            imageVector = if (isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
+                            contentDescription = if (isDarkTheme) "Cambiar a modo claro" else "Cambiar a modo oscuro"
+                        )
+                    }
                     IconButton(onClick = onViewItineraryClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.List,

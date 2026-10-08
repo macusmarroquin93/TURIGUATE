@@ -1,5 +1,7 @@
 package com.example.turiguate.model
 
+import androidx.annotation.DrawableRes
+
 /**
  * Representa un destino turístico en el catálogo local de TuriGuate.
  */
@@ -10,7 +12,7 @@ data class Destination(
     val department: String,
     val description: String,
     val longDescription: String,
-    val imageUrl: String,
+    @get:DrawableRes val imageRes: Int,
     val price: String,
     val rating: Double,
     val bestTimeToVisit: String,

@@ -52,7 +52,7 @@ fun ItineraryCard(
 
             // Imagen con Coil
             AsyncImage(
-                model = item.imageUrl,
+                model = item.imageRes,
                 contentDescription = "Imagen de ${item.destination}",
                 modifier = Modifier
                     .fillMaxWidth()

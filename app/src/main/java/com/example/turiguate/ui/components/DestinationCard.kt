@@ -22,7 +22,7 @@ import com.example.turiguate.model.Destination
 
 /**
  * Componente reutilizable para mostrar destinos sugeridos.
- * Incluye carga de imagen remota con Coil y estilos de Material 3.
+ * Incluye carga de imagen local/remota con Coil y estilos de Material 3.
  */
 @Composable
 fun DestinationCard(
@@ -33,7 +33,7 @@ fun DestinationCard(
     DestinationCard(
         title = destination.name,
         description = destination.description,
-        imageUrl = destination.imageUrl,
+        imageModel = destination.imageRes,
         onClick = onClick,
         modifier = modifier
     )
@@ -43,7 +43,7 @@ fun DestinationCard(
 fun DestinationCard(
     title: String,
     description: String,
-    imageUrl: String,
+    imageModel: Any,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -58,18 +58,17 @@ fun DestinationCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column {
-            // Imagen remota usando Coil
             AsyncImage(
-                model = imageUrl,
+                model = imageModel,
                 contentDescription = title,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(180.dp)
-                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)), // Clip según requerimientos
-                contentScale = ContentScale.Crop // ContentScale según requerimientos
+                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
+                contentScale = ContentScale.Crop
             )
             
-            Column(modifier = Modifier.padding(16.dp)) { // Padding múltiplo de 4
+            Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,
