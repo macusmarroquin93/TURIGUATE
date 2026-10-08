@@ -24,14 +24,16 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Generador(
-    onBackClick: () -> Unit,
+    days: Int = 5,
+    budget: String = "Medio",
+    onBackClick: () -> Unit = {},
     onDestinationClick: (Int) -> Unit = {}
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
     // Datos de ejemplo en memoria (Inmutables)
-    val itineraryItems = remember { getMockItinerary() }
+    val itineraryItems = remember(days) { getMockItinerary().take(days * 2) }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -39,7 +41,7 @@ fun Generador(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "Generador",
+                        "Mi Itinerario",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -70,7 +72,7 @@ fun Generador(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "5 días · Presupuesto medio",
+                        text = "$days días · Presupuesto ${budget.lowercase()}",
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium
                     )

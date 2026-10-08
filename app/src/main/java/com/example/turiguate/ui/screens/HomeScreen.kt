@@ -6,8 +6,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,7 +24,9 @@ import com.example.turiguate.ui.components.CategoryChip
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    onGenerateItineraryClick: (days: Int, budget: String) -> Unit = { _, _ -> }
+) {
     // Estados locales para la interactividad
     var days by remember { mutableIntStateOf(5) }
     var selectedBudget by remember { mutableStateOf("Medio") }
@@ -152,7 +154,7 @@ fun HomeScreen() {
 
             // Botón de acción
             Button(
-                onClick = { /* Acción de generar */ },
+                onClick = { onGenerateItineraryClick(days, selectedBudget) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
@@ -169,7 +171,7 @@ fun HomeScreen() {
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Icon(Icons.Default.ArrowForward, contentDescription = null)
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
                 }
             }
         }
@@ -214,7 +216,7 @@ fun DayStepper(
                     )
                 }
             }
-            
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = count.toString(),
