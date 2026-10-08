@@ -18,11 +18,27 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.turiguate.model.Destination
 
 /**
  * Componente reutilizable para mostrar destinos sugeridos.
  * Incluye carga de imagen remota con Coil y estilos de Material 3.
  */
+@Composable
+fun DestinationCard(
+    destination: Destination,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    DestinationCard(
+        title = destination.name,
+        description = destination.description,
+        imageUrl = destination.imageUrl,
+        onClick = onClick,
+        modifier = modifier
+    )
+}
+
 @Composable
 fun DestinationCard(
     title: String,
