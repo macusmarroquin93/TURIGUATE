@@ -222,7 +222,7 @@ private fun getMockItinerary(): List<ItineraryItem> {
             description = "Exploración de la fortaleza histórica a orillas del Lago de Izabal.",
             restaurant = "Hotel Catamarán", hotel = "G-Land",
             transport = "15 min en lancha", price = "Q 200.00",
-            imageRes = R.drawable.rio_dulce
+            imageRes = R.drawable.castillo_felipe
         )
     )
 }
