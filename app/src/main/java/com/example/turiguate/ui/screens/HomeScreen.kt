@@ -1,3 +1,4 @@
+
 package com.example.turiguate.ui.screens
 
 import androidx.compose.foundation.background
@@ -6,8 +7,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,32 +20,58 @@ import androidx.compose.ui.unit.dp
 import com.example.turiguate.ui.components.CategoryChip
 
 /**
- * Pantalla Principal: Planifica tu viaje (Lab #1).
- * Se ha mantenido y adaptado para incluir la navegación al Generador.
+ * Pantalla principal de TURIGUATE.
+ *
+ * Permite configurar el viaje, generar un itinerario
+ * y consultar los itinerarios guardados en Room.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalLayoutApi::class
+)
 @Composable
 fun HomeScreen(
-    onGenerateClick: () -> Unit
+    onGenerateClick: () -> Unit,
+    onMisItinerariosClick: () -> Unit
 ) {
-    var days by remember { mutableIntStateOf(5) }
-    var selectedBudget by remember { mutableStateOf("Medio") }
-    val selectedInterests = remember { mutableStateListOf("Cultura", "Gastronomía", "Historia") }
+
+    // Estado de la planificación
+    var days by remember {
+        mutableIntStateOf(5)
+    }
+
+    var selectedBudget by remember {
+        mutableStateOf("Medio")
+    }
+
+    val selectedInterests = remember {
+        mutableStateListOf(
+            "Cultura",
+            "Gastronomía",
+            "Historia"
+        )
+    }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            "TuriGuate",
+                            text = "TuriGuate",
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Spacer(
+                            modifier = Modifier.width(8.dp)
+                        )
+
                         Text(
-                            "Planifica tu viaje",
+                            text = "Planifica tu viaje",
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
@@ -55,6 +82,7 @@ fun HomeScreen(
             )
         }
     ) { paddingValues ->
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -63,13 +91,21 @@ fun HomeScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            Column(modifier = Modifier.padding(top = 16.dp)) {
+
+            // Encabezado
+            Column(
+                modifier = Modifier.padding(top = 16.dp)
+            ) {
                 Text(
                     text = "Planifica tu viaje",
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.ExtraBold
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+
+                Spacer(
+                    modifier = Modifier.height(8.dp)
+                )
+
                 Text(
                     text = "Dinos qué buscas y crearemos un itinerario a tu medida en segundos.",
                     style = MaterialTheme.typography.bodyLarge,
@@ -84,11 +120,21 @@ fun HomeScreen(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.height(12.dp))
+
+                Spacer(
+                    modifier = Modifier.height(12.dp)
+                )
+
                 DayStepper(
                     count = days,
-                    onIncrement = { days++ },
-                    onDecrement = { if (days > 1) days-- }
+                    onIncrement = {
+                        days++
+                    },
+                    onDecrement = {
+                        if (days > 1) {
+                            days--
+                        }
+                    }
                 )
             }
 
@@ -99,17 +145,29 @@ fun HomeScreen(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.height(12.dp))
+
+                Spacer(
+                    modifier = Modifier.height(12.dp)
+                )
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    val budgets = listOf("Bajo costo", "Medio", "Alto")
+
+                    val budgets = listOf(
+                        "Bajo costo",
+                        "Medio",
+                        "Alto"
+                    )
+
                     budgets.forEach { budget ->
                         CategoryChip(
                             text = budget,
                             isSelected = selectedBudget == budget,
-                            onClick = { selectedBudget = budget },
+                            onClick = {
+                                selectedBudget = budget
+                            },
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -123,23 +181,40 @@ fun HomeScreen(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.height(12.dp))
+
+                Spacer(
+                    modifier = Modifier.height(12.dp)
+                )
+
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+
                     val interests = listOf(
-                        "Aventura", "Cultura", "Gastronomía",
-                        "Naturaleza", "Historia", "Descanso",
-                        "Playa", "Deportes", "Otros"
+                        "Aventura",
+                        "Cultura",
+                        "Gastronomía",
+                        "Naturaleza",
+                        "Historia",
+                        "Descanso",
+                        "Playa",
+                        "Deportes",
+                        "Otros"
                     )
+
                     interests.forEach { interest ->
+
                         CategoryChip(
                             text = interest,
-                            isSelected = selectedInterests.contains(interest),
+                            isSelected = selectedInterests.contains(
+                                interest
+                            ),
                             onClick = {
-                                if (selectedInterests.contains(interest)) {
+                                if (
+                                    selectedInterests.contains(interest)
+                                ) {
                                     selectedInterests.remove(interest)
                                 } else {
                                     selectedInterests.add(interest)
@@ -150,32 +225,62 @@ fun HomeScreen(
                 }
             }
 
-            // Botón de acción: Navega al Generador
+            // Botón: Generar itinerario
             Button(
                 onClick = onGenerateClick,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
-                    .padding(bottom = 16.dp),
+                    .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
-                        "Generar itinerario",
+                        text = "Generar itinerario",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(Icons.Default.ArrowForward, contentDescription = null)
+
+                    Spacer(
+                        modifier = Modifier.width(8.dp)
+                    )
+
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null
+                    )
                 }
             }
+
+            // Nuevo botón: Consultar itinerarios de Room
+            OutlinedButton(
+                onClick = onMisItinerariosClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    text = "Mis itinerarios guardados",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(
+                modifier = Modifier.height(16.dp)
+            )
         }
     }
 }
 
+/**
+ * Selector de cantidad de días.
+ */
 @Composable
 fun DayStepper(
     count: Int,
@@ -183,40 +288,75 @@ fun DayStepper(
     onDecrement: () -> Unit
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(
+            alpha = 0.3f
+        ),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
+
         Row(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
+
+            // Disminuir días
             IconButton(
                 onClick = onDecrement,
-                modifier = Modifier.background(Color.White, RoundedCornerShape(12.dp))
+                modifier = Modifier.background(
+                    Color.White,
+                    RoundedCornerShape(12.dp)
+                )
             ) {
-                Box(modifier = Modifier.size(24.dp), contentAlignment = Alignment.Center) {
-                    Box(modifier = Modifier.width(14.dp).height(2.dp).background(LocalContentColor.current))
+                Box(
+                    modifier = Modifier.size(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(14.dp)
+                            .height(2.dp)
+                            .background(LocalContentColor.current)
+                    )
                 }
             }
-            
-            Row(verticalAlignment = Alignment.CenterVertically) {
+
+            // Cantidad de días
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     text = count.toString(),
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "días", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+
+                Spacer(
+                    modifier = Modifier.width(8.dp)
+                )
+
+                Text(
+                    text = "días",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
+                )
             }
 
+            // Aumentar días
             IconButton(
                 onClick = onIncrement,
-                modifier = Modifier.background(MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
+                modifier = Modifier.background(
+                    MaterialTheme.colorScheme.primary,
+                    RoundedCornerShape(12.dp)
+                )
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Más", tint = Color.White)
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Más",
+                    tint = Color.White
+                )
             }
         }
     }
@@ -226,6 +366,9 @@ fun DayStepper(
 @Composable
 fun HomeScreenPreview() {
     MaterialTheme {
-        HomeScreen(onGenerateClick = {})
+        HomeScreen(
+            onGenerateClick = {},
+            onMisItinerariosClick = {}
+        )
     }
 }
