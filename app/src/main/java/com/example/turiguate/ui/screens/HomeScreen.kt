@@ -1,249 +1,375 @@
 package com.example.turiguate.ui.screens
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.example.turiguate.ui.components.CategoryChip
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.example.turiguate.PlanScreen
+import com.example.turiguate.R
+import com.example.turiguate.data.Category
+import com.example.turiguate.data.Destination
+import com.example.turiguate.data.LocalCatalog
+import com.example.turiguate.ui.TravelUiState
+import com.example.turiguate.ui.TravelViewModel
+import coil.compose.AsyncImage
 
-/**
- * Pantalla Principal: Planifica tu viaje.
- * Implementa el wireframe solicitado siguiendo los estándares de Material 3.
- */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen() {
-    // Estados locales para la interactividad
-    var days by remember { mutableIntStateOf(5) }
-    var selectedBudget by remember { mutableStateOf("Medio") }
-    val selectedInterests = remember { mutableStateListOf("Cultura", "Gastronomía", "Historia") }
+fun HomeScreen(
+    model: TravelViewModel = viewModel()
+) {
+    val state by model.state.collectAsStateWithLifecycle()
+    val navController = rememberNavController()
+    val entry by navController.currentBackStackEntryAsState()
+    val route = entry?.destination?.route ?: "catalog"
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            "TuriGuate",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            "Planifica tu viaje",
-                            style = MaterialTheme.typography.titleMedium
-                        )
+            TopAppBar(
+                title = { Text("TuriGuate") },
+                navigationIcon = {
+                    if (route != "catalog") {
+                        IconButton(
+                            onClick = { navController.popBackStack() }
+                        ) {
+                            Icon(
+                                Icons.Default.ArrowBack,
+                                contentDescription = "Volver"
+                            )
+                        }
                     }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                }
             )
+        },
+        bottomBar = {
+            NavigationBar {
+                NavigationBarItem(
+                    selected = route == "catalog",
+                    onClick = {
+                        navController.navigate("catalog") {
+                            popUpTo("catalog") { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    },
+                    icon = {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = null
+                        )
+                    },
+                    label = { Text("Explorar") }
+                )
+
+                NavigationBarItem(
+                    selected = route == "plan",
+                    onClick = {
+                        navController.navigate("plan") {
+                            launchSingleTop = true
+                        }
+                    },
+                    icon = {
+                        Icon(
+                            Icons.Default.List,
+                            contentDescription = null
+                        )
+                    },
+                    label = {
+                        Text("Mi plan (${state.selectedIds.size})")
+                    }
+                )
+            }
         }
-    ) { paddingValues ->
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 24.dp) // Alineación según wireframe
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .padding(padding)
         ) {
-            // Cabecera
-            Column(modifier = Modifier.padding(top = 16.dp)) {
-                Text(
-                    text = "Planifica tu viaje",
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.ExtraBold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Dinos qué buscas y crearemos un itinerario a tu medida en segundos.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.Gray
+            if (state.loading) {
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
-            // Sección: Días de viaje
-            Column {
+            state.loadError?.let { error ->
                 Text(
-                    text = "¿Cuántos días vas a viajar?",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    text = error,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(16.dp)
                 )
-                Spacer(modifier = Modifier.height(12.dp))
-                DayStepper(
-                    count = days,
-                    onIncrement = { days++ },
-                    onDecrement = { if (days > 1) days-- }
-                )
-            }
 
-            // Sección: Presupuesto
-            Column {
-                Text(
-                    text = "Presupuesto estimado",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                TextButton(
+                    onClick = model::loadPlans,
+                    enabled = !state.loading
                 ) {
-                    val budgets = listOf("Bajo costo", "Medio", "Alto")
-                    budgets.forEach { budget ->
-                        CategoryChip(
-                            text = budget,
-                            isSelected = selectedBudget == budget,
-                            onClick = { selectedBudget = budget },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+                    Text("Reintentar lectura")
                 }
             }
 
-            // Sección: Intereses
-            Column {
+            state.message?.let { message ->
                 Text(
-                    text = "¿Cuáles son tus intereses?",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    text = message,
+                    modifier = Modifier.padding(16.dp)
                 )
-                Spacer(modifier = Modifier.height(12.dp))
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    val interests = listOf(
-                        "Aventura", "Cultura", "Gastronomía",
-                        "Naturaleza", "Historia", "Descanso",
-                        "Playa", "Deportes", "Otros"
+            }
+
+            NavHost(
+                navController = navController,
+                startDestination = "catalog",
+                modifier = Modifier.weight(1f)
+            ) {
+                composable("catalog") {
+                    CatalogScreen(
+                        state = state,
+                        onQueryChange = model::changeQuery,
+                        onCategoryChange = model::changeCategory,
+                        onClearFilters = model::clearFilters,
+                        onDestinationClick = { id ->
+                            navController.navigate("detail/$id")
+                        }
                     )
-                    interests.forEach { interest ->
-                        CategoryChip(
-                            text = interest,
-                            isSelected = selectedInterests.contains(interest),
-                            onClick = {
-                                if (selectedInterests.contains(interest)) {
-                                    selectedInterests.remove(interest)
-                                } else {
-                                    selectedInterests.add(interest)
+                }
+
+                composable("detail/{id}") { backStackEntry ->
+                    val id = backStackEntry.arguments?.getString("id")
+
+                    val destination = LocalCatalog.destinations.find {
+                        it.id == id
+                    }
+
+                    if (destination == null) {
+                        Text(
+                            "Destino no disponible.",
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    } else {
+                        DestinationDetailScreen(
+                            destination = destination,
+                            selected = destination.id in state.selectedIds,
+                            enabled = !state.saving,
+                            onToggleSelection = {
+                                model.toggleDestination(destination.id)
+                            },
+                            onOpenPlan = {
+                                navController.navigate("plan") {
+                                    launchSingleTop = true
                                 }
                             }
                         )
                     }
                 }
-            }
 
-            // Botón de acción
-            Button(
-                onClick = { /* Acción de generar */ },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .padding(bottom = 16.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        "Generar itinerario",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                composable("plan") {
+                    PlanScreen(
+                        state = state,
+                        onTitleChange = model::changeTitle,
+                        onDaysChange = model::changeDays,
+                        onRemoveDestination = model::toggleDestination,
+                        onSave = model::savePlan,
+                        onExplore = {
+                            navController.navigate("catalog") {
+                                popUpTo("catalog") { inclusive = false }
+                                launchSingleTop = true
+                            }
+                        }
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(Icons.Default.ArrowForward, contentDescription = null)
                 }
             }
         }
     }
 }
 
-/**
- * Componente interno para el selector de días (Stepper).
- */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DayStepper(
-    count: Int,
-    onIncrement: () -> Unit,
-    onDecrement: () -> Unit
+private fun CatalogScreen(
+    state: TravelUiState,
+    onQueryChange: (String) -> Unit,
+    onCategoryChange: (Category?) -> Unit,
+    onClearFilters: () -> Unit,
+    onDestinationClick: (String) -> Unit
 ) {
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-        shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth()
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            IconButton(
-                onClick = onDecrement,
-                modifier = Modifier.background(Color.White, RoundedCornerShape(12.dp))
+        item {
+            Text(
+                "Descubre Guatemala",
+                style = MaterialTheme.typography.headlineMedium
+            )
+        }
+
+        item {
+            OutlinedTextField(
+                value = state.query,
+                onValueChange = onQueryChange,
+                label = { Text("Buscar por nombre") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        item {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Se reemplaza Icons.Default.Remove con una implementación manual (Box) para evitar el error
-                // java.lang.NoClassDefFoundError: androidx/compose/material/icons/filled/RemoveKt en el Preview.
-                // Esto sucede porque 'Remove' está en la librería extendida, que a veces falla al cargar en el IDE.
-                Box(
-                    modifier = Modifier.size(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .width(14.dp)
-                            .height(2.dp)
-                            .background(LocalContentColor.current)
+                item {
+                    FilterChip(
+                        selected = state.category == null,
+                        onClick = { onCategoryChange(null) },
+                        label = { Text("Todas") }
+                    )
+                }
+
+                items(Category.values().toList()) { category ->
+                    FilterChip(
+                        selected = state.category == category,
+                        onClick = { onCategoryChange(category) },
+                        label = { Text(category.label) }
                     )
                 }
             }
-            
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = count.toString(),
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "días",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium
-                )
-            }
+        }
 
-            IconButton(
-                onClick = onIncrement,
-                modifier = Modifier.background(MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
+        item {
+            Text("${state.visibleDestinations.size} destinos encontrados")
+        }
+
+        if (state.visibleDestinations.isEmpty()) {
+            item {
+                Column {
+                    Text("No hay destinos con esta búsqueda y categoría.")
+
+                    TextButton(onClick = onClearFilters) {
+                        Text("Limpiar filtros")
+                    }
+                }
+            }
+        }
+
+        items(
+            items = state.visibleDestinations,
+            key = { it.id }
+        ) { destination ->
+            Card(
+                onClick = { onDestinationClick(destination.id) },
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Más", tint = Color.White)
+                DestinationIllustration(destination)
+
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        destination.name,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+
+                    Text(
+                        "${destination.department} · ${destination.category.label}"
+                    )
+
+                    if (destination.id in state.selectedIds) {
+                        Text(
+                            "Incluido en tu plan",
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    Text("Ver detalle")
+                }
             }
         }
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun HomeScreenPreview() {
-    MaterialTheme {
-        HomeScreen()
+private fun DestinationDetailScreen(
+    destination: Destination,
+    selected: Boolean,
+    enabled: Boolean,
+    onToggleSelection: () -> Unit,
+    onOpenPlan: () -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item { DestinationIllustration(destination) }
+
+        item {
+            Text(
+                destination.name,
+                style = MaterialTheme.typography.headlineMedium
+            )
+        }
+
+        item {
+            Text("${destination.department} · ${destination.category.label}")
+        }
+
+        item { Text(destination.description) }
+
+        item {
+            Button(
+                onClick = onToggleSelection,
+                enabled = enabled,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    if (selected) "Quitar de mi plan"
+                    else "Agregar a mi plan"
+                )
+            }
+        }
+
+        item {
+            OutlinedButton(
+                onClick = onOpenPlan,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Revisar mi plan")
+            }
+        }
     }
+}
+
+@Composable
+private fun DestinationIllustration(
+    destination: Destination
+) {
+    val fallbackImage =
+        painterResource(R.drawable.destination_landscape)
+
+    AsyncImage(
+        model = "file:///android_asset/destinations/${destination.id}.jpg",
+        contentDescription = "Fotografía de ${destination.name}",
+        placeholder = fallbackImage,
+        error = fallbackImage,
+        contentScale = ContentScale.Crop,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(180.dp)
+    )
 }
