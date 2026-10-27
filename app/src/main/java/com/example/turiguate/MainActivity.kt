@@ -6,14 +6,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
 import com.example.turiguate.ui.screens.Generador
+import androidx.activity.enableEdgeToEdge
 import com.example.turiguate.ui.screens.HomeScreen
 import com.example.turiguate.ui.theme.TURIGUATETheme
 
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        enableEdgeToEdge()
         setContent {
             TURIGUATETheme {
 
@@ -48,6 +48,8 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                 }
+                // Llamamos a la pantalla principal que hemos creado
+                HomeScreen()
             }
         }
     }
