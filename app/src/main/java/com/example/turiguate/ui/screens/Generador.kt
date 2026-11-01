@@ -22,6 +22,8 @@ import com.example.turiguate.ui.components.ItineraryCard
 import com.example.turiguate.ui.viewmodel.ItinerarioViewModel
 import com.example.turiguate.ui.viewmodel.ItinerarioViewModelFactory
 import kotlinx.coroutines.launch
+import com.example.turiguate.model.PreferenciasViaje
+import com.example.turiguate.model.filtrarPorIntereses
 
 /**
  * Pantalla Generador.
@@ -32,8 +34,9 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Generador(
-    onBackClick: () -> Unit
-) {
+    onBackClick: () -> Unit,
+    preferencias: PreferenciasViaje = PreferenciasViaje()
+){
     val snackbarHostState = remember {
         SnackbarHostState()
     }
@@ -57,9 +60,42 @@ fun Generador(
         mutableStateOf(false)
     }
 
-    // Actividades de ejemplo
-    val itineraryItems = remember {
-        getMockItinerary()
+    // Actividades
+    val itineraryItems = remember(preferencias) {
+        val destinos = filtrarPorIntereses(
+            destinos = getMockItinerary(),
+            intereses = preferencias.intereses
+        )
+
+        if (destinos.isEmpty()) {
+            return@remember emptyList<ItineraryItem>()
+        }
+
+        List(preferencias.dias) { indice ->
+            val destino = destinos.getOrNull(indice)
+
+            if (destino != null) {
+                destino.copy(
+                    id = indice + 1,
+                    day = indice + 1
+                )
+            } else {
+                // Si se agotan los destinos, dejamos un día libre
+                // en el último lugar, sin inventar otra excursión.
+                val ultimoDestino = destinos.last()
+
+                ultimoDestino.copy(
+                    id = indice + 1,
+                    day = indice + 1,
+                    destination = "Tiempo libre en ${ultimoDestino.destination}",
+                    description = "Día libre para descansar o elegir actividades por tu cuenta.",
+                    restaurant = "A elección",
+                    hotel = "Por definir",
+                    transport = "Según la actividad elegida",
+                    price = "Por definir"
+                )
+            }
+        }
     }
 
     Scaffold(
@@ -108,7 +144,7 @@ fun Generador(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "5 días · Presupuesto medio",
+                        text = "${preferencias.dias} días · Presupuesto ${preferencias.presupuesto}",
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium
                     )
@@ -225,7 +261,7 @@ fun Generador(
                                 }
                             )
                         },
-                        enabled = !guardando,
+                        enabled = !guardando && itineraryItems.isNotEmpty(),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
@@ -257,9 +293,10 @@ fun Generador(
 }
 
 /**
- * Datos de prueba: 10 actividades distribuidas
- * en 5 días.
+ * Datos de destinos
+ **
  */
+
 private fun getMockItinerary(): List<ItineraryItem> {
     return listOf(
         ItineraryItem(

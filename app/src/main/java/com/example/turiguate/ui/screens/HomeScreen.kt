@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.turiguate.ui.components.CategoryChip
+import com.example.turiguate.model.PreferenciasViaje
 
 /**
  * Pantalla principal de TURIGUATE.
@@ -31,9 +32,9 @@ import com.example.turiguate.ui.components.CategoryChip
 )
 @Composable
 fun HomeScreen(
-    onGenerateClick: () -> Unit,
+    onGenerateClick: (PreferenciasViaje) -> Unit,
     onMisItinerariosClick: () -> Unit
-) {
+){
 
     // Estado de la planificación
     var days by remember {
@@ -227,7 +228,15 @@ fun HomeScreen(
 
             // Botón: Generar itinerario
             Button(
-                onClick = onGenerateClick,
+                onClick = {
+                    onGenerateClick(
+                        PreferenciasViaje(
+                            dias = days,
+                            presupuesto = selectedBudget,
+                            intereses = selectedInterests.toList()
+                        )
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
