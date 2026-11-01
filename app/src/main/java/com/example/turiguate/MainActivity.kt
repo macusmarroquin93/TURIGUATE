@@ -48,8 +48,6 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                 }
-                // Llamamos a la pantalla principal que hemos creado
-                HomeScreen()
             }
         }
     }

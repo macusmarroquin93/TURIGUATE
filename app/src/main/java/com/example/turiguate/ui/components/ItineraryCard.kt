@@ -59,7 +59,16 @@ fun ItineraryCard(
                     .height(180.dp)
                     .clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop,
-                placeholder = painterResource(id = R.drawable.ic_launcher_background) // Placeholder requerido
+                placeholder = painterResource(
+                    id = R.drawable.destination_landscape
+                ),
+                onError = { error ->
+                    android.util.Log.e(
+                        "TuriGuateFotos",
+                        "No se pudo cargar ${item.imageUrl}",
+                        error.result.throwable
+                    )
+                }
             )
 
             Spacer(modifier = Modifier.height(12.dp))
