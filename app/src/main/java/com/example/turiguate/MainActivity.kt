@@ -1,12 +1,12 @@
-
 package com.example.turiguate
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.*
-import com.example.turiguate.ui.screens.Generador
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.*
+import com.example.turiguate.model.PreferenciasViaje
+import com.example.turiguate.ui.screens.Generador
 import com.example.turiguate.ui.screens.HomeScreen
 import com.example.turiguate.ui.theme.TURIGUATETheme
 
@@ -14,19 +14,21 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
             TURIGUATETheme {
-
-                // Navegación mediante estado de Compose
                 var currentScreen by remember {
                     mutableStateOf("home")
                 }
 
-                when (currentScreen) {
+                var preferencias by remember {
+                    mutableStateOf(PreferenciasViaje())
+                }
 
-                    // Pantalla principal
+                when (currentScreen) {
                     "home" -> HomeScreen(
-                        onGenerateClick = {
+                        onGenerateClick = { seleccion ->
+                            preferencias = seleccion
                             currentScreen = "generador"
                         },
                         onMisItinerariosClick = {
@@ -34,22 +36,19 @@ class MainActivity : ComponentActivity() {
                         }
                     )
 
-                    // Pantalla del generador de itinerarios
                     "generador" -> Generador(
+                        preferencias = preferencias,
                         onBackClick = {
                             currentScreen = "home"
                         }
                     )
 
-                    // Pantalla de itinerarios guardados en Room
                     "mis_itinerarios" -> PlanScreen(
                         onBackClick = {
                             currentScreen = "home"
                         }
                     )
                 }
-                // Llamamos a la pantalla principal que hemos creado
-                HomeScreen()
             }
         }
     }

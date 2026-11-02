@@ -13,10 +13,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.turiguate.ui.viewmodel.ItinerarioViewModel
 import com.example.turiguate.ui.viewmodel.ItinerarioViewModelFactory
+import com.example.turiguate.ui.TravelUiState
+import com.example.turiguate.data.LocalCatalog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -135,16 +139,8 @@ fun PlanScreen(
         }
     }
 }
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import com.example.turiguate.data.LocalCatalog
-import com.example.turiguate.ui.TravelUiState
+
+
 
 @OptIn(
     ExperimentalLayoutApi::class,

@@ -22,6 +22,9 @@ import com.example.turiguate.ui.components.ItineraryCard
 import com.example.turiguate.ui.viewmodel.ItinerarioViewModel
 import com.example.turiguate.ui.viewmodel.ItinerarioViewModelFactory
 import kotlinx.coroutines.launch
+import com.example.turiguate.model.PreferenciasViaje
+import com.example.turiguate.model.filtrarPorIntereses
+import com.example.turiguate.model.filtrarPorPresupuesto
 
 /**
  * Pantalla Generador.
@@ -32,8 +35,9 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Generador(
-    onBackClick: () -> Unit
-) {
+    onBackClick: () -> Unit,
+    preferencias: PreferenciasViaje = PreferenciasViaje()
+){
     val snackbarHostState = remember {
         SnackbarHostState()
     }
@@ -57,10 +61,81 @@ fun Generador(
         mutableStateOf(false)
     }
 
-    // Actividades de ejemplo
-    val itineraryItems = remember {
-        getMockItinerary()
+    // Actividades
+    val opciones = remember(preferencias) {
+        val destinosPorInteres = filtrarPorIntereses(
+            destinos = getMockItinerary(),
+            intereses = preferencias.intereses
+        )
+
+        val destinos = filtrarPorPresupuesto(
+            destinos = destinosPorInteres,
+            presupuesto = preferencias.presupuesto
+        )
+
+        if (destinos.isEmpty()) {
+            return@remember emptyList<List<ItineraryItem>>()
+        }
+
+        destinos.indices.take(3).map { desplazamiento ->
+            val orden = destinos.drop(desplazamiento) +
+                    destinos.take(desplazamiento)
+
+            List(preferencias.dias) { indice ->
+                val destino = orden.getOrNull(indice)
+
+                if (destino != null) {
+                    destino.copy(
+                        id = indice + 1,
+                        day = indice + 1
+                    )
+                } else {
+                    val ultimoDestino = orden.last()
+
+                    ultimoDestino.copy(
+                        id = indice + 1,
+                        day = indice + 1,
+                        destination =
+                            "Tiempo libre en ${ultimoDestino.destination}",
+                        description =
+                            "Día libre para descansar o elegir actividades por tu cuenta.",
+                        restaurant = "A elección",
+                        hotel = "Por definir",
+                        transport = "Según la actividad elegida",
+                        price = "Por definir"
+                    )
+                }
+            }
+        }.distinctBy { itinerario ->
+            itinerario.map { it.destination }
+        }
     }
+
+    var opcionSeleccionada by remember(preferencias) {
+        mutableIntStateOf(0)
+    }
+
+    val itineraryItems = opciones.getOrElse(opcionSeleccionada) {
+        emptyList<ItineraryItem>()
+    }
+
+    val precios = itineraryItems.map { actividad ->
+        actividad.price
+            .replace("Q", "")
+            .replace(",", "")
+            .trim()
+            .toDoubleOrNull()
+    }
+
+    val totalEstimado = precios.filterNotNull().sum()
+
+    val hayCostosPendientes = precios.any { it == null }
+
+    val montoFormateado = String.format(
+        java.util.Locale.US,
+        "Q %,.2f",
+        totalEstimado
+    )
 
     Scaffold(
         snackbarHost = {
@@ -108,7 +183,12 @@ fun Generador(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "5 días · Presupuesto medio",
+                        text = "${preferencias.dias} días · Presupuesto ${preferencias.presupuesto}\n" +
+                                if (hayCostosPendientes) {
+                                    "Subtotal estimado: $montoFormateado · Hay costos por definir"
+                                } else {
+                                    "Total estimado: $montoFormateado"
+                                },
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium
                     )
@@ -120,7 +200,13 @@ fun Generador(
                     SuggestionChip(
                         onClick = {},
                         label = {
-                            Text("Recomendado")
+                            Text(
+                                if (opciones.isEmpty()) {
+                                    "Sin coincidencias"
+                                } else {
+                                    "Opción ${opcionSeleccionada + 1} de ${opciones.size}"
+                                }
+                            )
                         },
                         colors = SuggestionChipDefaults.suggestionChipColors(
                             containerColor = MaterialTheme.colorScheme.primary,
@@ -137,6 +223,17 @@ fun Generador(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                if (itineraryItems.isEmpty()) {
+                    item {
+                        Text(
+                            text = "No hay actividades con precio conocido " +
+                                    "que coincidan con tus intereses y presupuesto. " +
+                                    "Prueba otro presupuesto o cambia tus intereses.",
+                            modifier = Modifier.padding(16.dp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
 
                 items(
                     items = itineraryItems,
@@ -166,12 +263,10 @@ fun Generador(
                     // Botón original
                     Button(
                         onClick = {
-                            scope.launch {
-                                snackbarHostState.showSnackbar(
-                                    "Comparar opciones estará disponible próximamente"
-                                )
-                            }
+                            opcionSeleccionada =
+                                (opcionSeleccionada + 1) % opciones.size
                         },
+                        enabled = opciones.size > 1 && !guardando,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
@@ -181,7 +276,7 @@ fun Generador(
                         )
                     ) {
                         Text(
-                            text = "Comparar opciones",
+                            text = "Ver otra opción",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -198,10 +293,11 @@ fun Generador(
                             guardando = true
 
                             itinerarioViewModel.guardarItinerarioGenerado(
-                                nombre = "Viaje por Guatemala",
+                                nombre = "Viaje de ${preferencias.dias} días" +
+                                        if (hayCostosPendientes) " (costos pendientes)" else "",
                                 destino = "Guatemala",
                                 fecha = "2026-10-15",
-                                presupuesto = 1500.0,
+                                presupuesto = totalEstimado,
                                 actividades = itineraryItems,
 
                                 onGuardado = {
@@ -225,7 +321,7 @@ fun Generador(
                                 }
                             )
                         },
-                        enabled = !guardando,
+                        enabled = !guardando && itineraryItems.isNotEmpty(),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
@@ -257,112 +353,157 @@ fun Generador(
 }
 
 /**
- * Datos de prueba: 10 actividades distribuidas
- * en 5 días.
+ * Datos de destinos
+ **
  */
+
 private fun getMockItinerary(): List<ItineraryItem> {
     return listOf(
         ItineraryItem(
             id = 1,
             day = 1,
+            destination = "Antigua Guatemala",
+            description = "Recorre calles empedradas, iglesias coloniales, museos y plazas.",
+            restaurant = "La Posada de Don Rodrigo",
+            hotel = "Hotel Casa Santo Domingo",
+            transport = "1hr en auto",
+            price = "Q 450.00",
+            imageUrl = "file:///android_asset/destinations/antigua.jpg"
+        ),
+        ItineraryItem(
+            id = 2,
+            day = 1,
+            destination = "Lago de Atitlán",
+            description = "Disfruta del paisaje del lago y conoce los pueblos de sus alrededores.",
+            restaurant = "El Pescador",
+            hotel = "Hotel Atitlán",
+            transport = "3hrs en bus",
+            price = "Q 600.00",
+            imageUrl = "file:///android_asset/destinations/atitlan.jpg"
+        ),
+        ItineraryItem(
+            id = 3,
+            day = 2,
+            destination = "Tikal",
+            description = "Explora una antigua ciudad maya rodeada de selva, templos y plazas.",
+            restaurant = "El Mesón del Jaguar",
+            hotel = "Jungle Lodge Tikal",
+            transport = "Vuelo interno (1hr)",
+            price = "Q 1,200.00",
+            imageUrl = "file:///android_asset/destinations/tikal.jpg"
+        ),
+        ItineraryItem(
+            id = 4,
+            day = 2,
+            destination = "Quiriguá",
+            description = "Conoce un sitio arqueológico maya reconocido por sus estelas talladas.",
+            restaurant = "Por definir",
+            hotel = "Por definir",
+            transport = "Por definir",
+            price = "Por definir",
+            imageUrl = "file:///android_asset/destinations/quirigua.jpg"
+        ),
+        ItineraryItem(
+            id = 5,
+            day = 3,
+            destination = "Semuc Champey",
+            description = "Descubre pozas naturales y senderos rodeados de vegetación.",
+            restaurant = "Comedor local",
+            hotel = "Hostal El Portal",
+            transport = "8hrs en 4x4",
+            price = "Q 750.00",
+            imageUrl = "file:///android_asset/destinations/semuc.jpg"
+        ),
+        ItineraryItem(
+            id = 6,
+            day = 3,
+            destination = "Laguna Lachuá",
+            description = "Descubre una laguna rodeada de bosque tropical y observa la naturaleza.",
+            restaurant = "Por definir",
+            hotel = "Por definir",
+            transport = "Por definir",
+            price = "Por definir",
+            imageUrl = "file:///android_asset/destinations/lachua.jpg"
+        ),
+        ItineraryItem(
+            id = 7,
+            day = 3,
+            destination = "Biotopo del Quetzal",
+            description = "Recorre senderos de bosque nuboso y conoce el hábitat del quetzal.",
+            restaurant = "Por definir",
+            hotel = "Por definir",
+            transport = "Por definir",
+            price = "Por definir",
+            imageUrl = "file:///android_asset/destinations/biotopo.jpg"
+        ),
+        ItineraryItem(
+            id = 8,
+            day = 4,
+            destination = "Volcán de Pacaya",
+            description = "Conoce paisajes volcánicos y senderos de montaña.",
+            restaurant = "Pizza del Volcán",
+            hotel = "N/A (Tour de día)",
+            transport = "1.5hrs en bus",
+            price = "Q 300.00",
+            imageUrl = "file:///android_asset/destinations/pacaya.jpg"
+        ),
+        ItineraryItem(
+            id = 9,
+            day = 4,
+            destination = "Volcán Acatenango",
+            description = "Un destino de montaña para caminatas exigentes y paisajes volcánicos.",
+            restaurant = "Por definir",
+            hotel = "Por definir",
+            transport = "Por definir",
+            price = "Por definir",
+            imageUrl = "file:///android_asset/destinations/acatenango.jpg"
+        ),
+        ItineraryItem(
+            id = 10,
+            day = 5,
+            destination = "Monterrico",
+            description = "Disfruta de las playas de arena oscura y los paisajes del Pacífico.",
+            restaurant = "El Pelícano",
+            hotel = "Dos Mundos Pacific",
+            transport = "2.5hrs en auto",
+            price = "Q 550.00",
+            imageUrl = "file:///android_asset/destinations/monterrico.jpg"
+        ),
+        ItineraryItem(
+            id = 11,
+            day = 5,
+            destination = "Río Dulce",
+            description = "Conoce paisajes de río, vegetación tropical y recorridos por el agua.",
+            restaurant = "Marimonte",
+            hotel = "Hotel Nana Juana",
+            transport = "5hrs en bus",
+            price = "Q 900.00",
+            imageUrl = "file:///android_asset/destinations/rio_dulce.jpg"
+        ),
+        ItineraryItem(
+            id = 12,
+            day = 5,
+            destination = "El Paredón",
+            description = "Conoce una comunidad costera del Pacífico, sus playas y ambiente de surf.",
+            restaurant = "Por definir",
+            hotel = "Por definir",
+            transport = "Por definir",
+            price = "Por definir",
+            imageUrl = "file:///android_asset/destinations/el_paredon.jpg"
+        ),
+        ItineraryItem(
+            id = 13,
+            day = 5,
             destination = "IRTRA de Retalhuleu",
             description = "Visita con entradas, atracciones incluidas, hospedaje y transporte.",
             restaurant = "El Aldeano",
             hotel = "Aldea de la Selva",
             transport = "4hrs en bus (desde capital)",
             price = "Q 850.00",
-            imageUrl = "https://images.unsplash.com/photo-1596436889106-be35e843f974?q=80&w=600"
+            imageUrl = "file:///android_asset/destinations/irtra.jpg"
         ),
         ItineraryItem(
-            id = 2,
-            day = 1,
-            destination = "Antigua Guatemala",
-            description = "Tour por iglesias coloniales, museos y cata de café artesanal.",
-            restaurant = "La Posada de Don Rodrigo",
-            hotel = "Hotel Casa Santo Domingo",
-            transport = "1hr en auto",
-            price = "Q 450.00",
-            imageUrl = "https://images.unsplash.com/photo-1590050752117-23a9d7f28243?q=80&w=600"
-        ),
-        ItineraryItem(
-            id = 3,
-            day = 2,
-            destination = "Lago de Atitlán",
-            description = "Paseo en lancha por los pueblos de San Juan y Santiago Atitlán.",
-            restaurant = "El Pescador",
-            hotel = "Hotel Atitlán",
-            transport = "3hrs en bus",
-            price = "Q 600.00",
-            imageUrl = "https://images.unsplash.com/photo-1565022699865-c3f25c792484?q=80&w=600"
-        ),
-        ItineraryItem(
-            id = 4,
-            day = 2,
-            destination = "Tikal",
-            description = "Exploración de la cuna de la civilización Maya al amanecer.",
-            restaurant = "El Mesón del Jaguar",
-            hotel = "Jungle Lodge Tikal",
-            transport = "Vuelo interno (1hr)",
-            price = "Q 1,200.00",
-            imageUrl = "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=600"
-        ),
-        ItineraryItem(
-            id = 5,
-            day = 3,
-            destination = "Semuc Champey",
-            description = "Nadado en pozas naturales de color turquesa y cuevas de K'an Ba.",
-            restaurant = "Comedor local",
-            hotel = "Hostal El Portal",
-            transport = "8hrs en 4x4",
-            price = "Q 750.00",
-            imageUrl = "https://images.unsplash.com/photo-1589991206670-65e3b5e43c51?q=80&w=600"
-        ),
-        ItineraryItem(
-            id = 6,
-            day = 3,
-            destination = "Volcán de Pacaya",
-            description = "Caminata moderada para observar paisajes volcánicos.",
-            restaurant = "Pizza del Volcán",
-            hotel = "N/A (Tour de día)",
-            transport = "1.5hrs en bus",
-            price = "Q 300.00",
-            imageUrl = "https://images.unsplash.com/photo-1544411047-c491e34a2465?q=80&w=600"
-        ),
-        ItineraryItem(
-            id = 7,
-            day = 4,
-            destination = "Monterrico",
-            description = "Liberación de tortugas y descanso en playas de arena volcánica.",
-            restaurant = "El Pelícano",
-            hotel = "Dos Mundos Pacific",
-            transport = "2.5hrs en auto",
-            price = "Q 550.00",
-            imageUrl = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600"
-        ),
-        ItineraryItem(
-            id = 8,
-            day = 4,
-            destination = "Quetzaltenango",
-            description = "Visita al Teatro Municipal y baños termales de Fuentes Georginas.",
-            restaurant = "Tertulianos",
-            hotel = "Hotel Pensión Bonifaz",
-            transport = "4hrs en bus",
-            price = "Q 400.00",
-            imageUrl = "https://images.unsplash.com/photo-1519046904884-53103b34b206?q=80&w=600"
-        ),
-        ItineraryItem(
-            id = 9,
-            day = 5,
-            destination = "Río Dulce",
-            description = "Recorrido en lancha por el cañón hacia Livingstone.",
-            restaurant = "Marimonte",
-            hotel = "Hotel Nana Juana",
-            transport = "5hrs en bus",
-            price = "Q 900.00",
-            imageUrl = "https://images.unsplash.com/photo-1568605114967-8130fe3a3699?q=80&w=600"
-        ),
-        ItineraryItem(
-            id = 10,
+            id = 14,
             day = 5,
             destination = "Castillo de San Felipe",
             description = "Exploración de la fortaleza histórica a orillas del Lago de Izabal.",
@@ -370,7 +511,18 @@ private fun getMockItinerary(): List<ItineraryItem> {
             hotel = "G-Land",
             transport = "15 min en lancha",
             price = "Q 200.00",
-            imageUrl = "https://images.unsplash.com/photo-1564501049412-61c2a3083791?q=80&w=600"
+            imageUrl = "file:///android_asset/destinations/castillo_san_felipe.jpg"
+        ),
+        ItineraryItem(
+            id = 15,
+            day = 5,
+            destination = "Quetzaltenango",
+            description = "Visita al Teatro Municipal y baños termales de Fuentes Georginas.",
+            restaurant = "Tertulianos",
+            hotel = "Hotel Pensión Bonifaz",
+            transport = "4hrs en bus",
+            price = "Q 400.00",
+            imageUrl = "file:///android_asset/destinations/quetzaltenango.jpg"
         )
     )
 }

@@ -58,4 +58,6 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation("androidx.navigation:navigation-compose:2.9.4")
 }
+
