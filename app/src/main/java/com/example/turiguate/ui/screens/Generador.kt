@@ -24,6 +24,7 @@ import com.example.turiguate.ui.viewmodel.ItinerarioViewModelFactory
 import kotlinx.coroutines.launch
 import com.example.turiguate.model.PreferenciasViaje
 import com.example.turiguate.model.filtrarPorIntereses
+import com.example.turiguate.model.filtrarPorPresupuesto
 
 /**
  * Pantalla Generador.
@@ -61,42 +62,80 @@ fun Generador(
     }
 
     // Actividades
-    val itineraryItems = remember(preferencias) {
-        val destinos = filtrarPorIntereses(
+    val opciones = remember(preferencias) {
+        val destinosPorInteres = filtrarPorIntereses(
             destinos = getMockItinerary(),
             intereses = preferencias.intereses
         )
 
+        val destinos = filtrarPorPresupuesto(
+            destinos = destinosPorInteres,
+            presupuesto = preferencias.presupuesto
+        )
+
         if (destinos.isEmpty()) {
-            return@remember emptyList<ItineraryItem>()
+            return@remember emptyList<List<ItineraryItem>>()
         }
 
-        List(preferencias.dias) { indice ->
-            val destino = destinos.getOrNull(indice)
+        destinos.indices.take(3).map { desplazamiento ->
+            val orden = destinos.drop(desplazamiento) +
+                    destinos.take(desplazamiento)
 
-            if (destino != null) {
-                destino.copy(
-                    id = indice + 1,
-                    day = indice + 1
-                )
-            } else {
-                // Si se agotan los destinos, dejamos un día libre
-                // en el último lugar, sin inventar otra excursión.
-                val ultimoDestino = destinos.last()
+            List(preferencias.dias) { indice ->
+                val destino = orden.getOrNull(indice)
 
-                ultimoDestino.copy(
-                    id = indice + 1,
-                    day = indice + 1,
-                    destination = "Tiempo libre en ${ultimoDestino.destination}",
-                    description = "Día libre para descansar o elegir actividades por tu cuenta.",
-                    restaurant = "A elección",
-                    hotel = "Por definir",
-                    transport = "Según la actividad elegida",
-                    price = "Por definir"
-                )
+                if (destino != null) {
+                    destino.copy(
+                        id = indice + 1,
+                        day = indice + 1
+                    )
+                } else {
+                    val ultimoDestino = orden.last()
+
+                    ultimoDestino.copy(
+                        id = indice + 1,
+                        day = indice + 1,
+                        destination =
+                            "Tiempo libre en ${ultimoDestino.destination}",
+                        description =
+                            "Día libre para descansar o elegir actividades por tu cuenta.",
+                        restaurant = "A elección",
+                        hotel = "Por definir",
+                        transport = "Según la actividad elegida",
+                        price = "Por definir"
+                    )
+                }
             }
+        }.distinctBy { itinerario ->
+            itinerario.map { it.destination }
         }
     }
+
+    var opcionSeleccionada by remember(preferencias) {
+        mutableIntStateOf(0)
+    }
+
+    val itineraryItems = opciones.getOrElse(opcionSeleccionada) {
+        emptyList<ItineraryItem>()
+    }
+
+    val precios = itineraryItems.map { actividad ->
+        actividad.price
+            .replace("Q", "")
+            .replace(",", "")
+            .trim()
+            .toDoubleOrNull()
+    }
+
+    val totalEstimado = precios.filterNotNull().sum()
+
+    val hayCostosPendientes = precios.any { it == null }
+
+    val montoFormateado = String.format(
+        java.util.Locale.US,
+        "Q %,.2f",
+        totalEstimado
+    )
 
     Scaffold(
         snackbarHost = {
@@ -144,7 +183,12 @@ fun Generador(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "${preferencias.dias} días · Presupuesto ${preferencias.presupuesto}",
+                        text = "${preferencias.dias} días · Presupuesto ${preferencias.presupuesto}\n" +
+                                if (hayCostosPendientes) {
+                                    "Subtotal estimado: $montoFormateado · Hay costos por definir"
+                                } else {
+                                    "Total estimado: $montoFormateado"
+                                },
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium
                     )
@@ -156,7 +200,13 @@ fun Generador(
                     SuggestionChip(
                         onClick = {},
                         label = {
-                            Text("Recomendado")
+                            Text(
+                                if (opciones.isEmpty()) {
+                                    "Sin coincidencias"
+                                } else {
+                                    "Opción ${opcionSeleccionada + 1} de ${opciones.size}"
+                                }
+                            )
                         },
                         colors = SuggestionChipDefaults.suggestionChipColors(
                             containerColor = MaterialTheme.colorScheme.primary,
@@ -173,6 +223,17 @@ fun Generador(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                if (itineraryItems.isEmpty()) {
+                    item {
+                        Text(
+                            text = "No hay actividades con precio conocido " +
+                                    "que coincidan con tus intereses y presupuesto. " +
+                                    "Prueba otro presupuesto o cambia tus intereses.",
+                            modifier = Modifier.padding(16.dp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
 
                 items(
                     items = itineraryItems,
@@ -202,12 +263,10 @@ fun Generador(
                     // Botón original
                     Button(
                         onClick = {
-                            scope.launch {
-                                snackbarHostState.showSnackbar(
-                                    "Comparar opciones estará disponible próximamente"
-                                )
-                            }
+                            opcionSeleccionada =
+                                (opcionSeleccionada + 1) % opciones.size
                         },
+                        enabled = opciones.size > 1 && !guardando,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
@@ -217,7 +276,7 @@ fun Generador(
                         )
                     ) {
                         Text(
-                            text = "Comparar opciones",
+                            text = "Ver otra opción",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -234,10 +293,11 @@ fun Generador(
                             guardando = true
 
                             itinerarioViewModel.guardarItinerarioGenerado(
-                                nombre = "Viaje por Guatemala",
+                                nombre = "Viaje de ${preferencias.dias} días" +
+                                        if (hayCostosPendientes) " (costos pendientes)" else "",
                                 destino = "Guatemala",
                                 fecha = "2026-10-15",
-                                presupuesto = 1500.0,
+                                presupuesto = totalEstimado,
                                 actividades = itineraryItems,
 
                                 onGuardado = {
