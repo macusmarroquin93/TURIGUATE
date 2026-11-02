@@ -39,6 +39,11 @@ fun Generador(
 
     // Datos de ejemplo en memoria (Inmutables)
     val itineraryItems = remember(days) { getMockItinerary().take(days * 2) }
+    val totalCost = remember(itineraryItems) {
+        itineraryItems.sumOf { item ->
+            item.price.replace("Q", "").replace(",", "").trim().toDoubleOrNull() ?: 0.0
+        }
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -90,14 +95,11 @@ fun Generador(
                         fontWeight = FontWeight.Medium
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    SuggestionChip(
-                        onClick = { },
-                        label = { Text("Recomendado") },
-                        colors = SuggestionChipDefaults.suggestionChipColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            labelColor = MaterialTheme.colorScheme.onPrimary
-                        ),
-                        border = null
+                    Text(
+                        text = "Total estimado: Q %,.2f".format(totalCost),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -158,70 +160,70 @@ private fun getMockItinerary(): List<ItineraryItem> {
             id = 1, day = 1, destination = "IRTRA de Retalhuleu",
             description = "Visita con entradas, atracciones incluidas, hospedaje y transporte.",
             restaurant = "El Aldeano", hotel = "Aldea de la Selva",
-            transport = "4hrs en bus (desde capital)", price = "Q 850.00",
+            transport = "4hrs en bus (desde capital)", price = "Q 650.00",
             imageRes = R.drawable.irtra
         ),
         ItineraryItem(
             id = 2, day = 1, destination = "Antigua Guatemala",
             description = "Tour por iglesias coloniales, museos y cata de café artesanal.",
             restaurant = "La Posada de Don Rodrigo", hotel = "Hotel Casa Santo Domingo",
-            transport = "1hr en auto", price = "Q 450.00",
+            transport = "1hr en auto", price = "Q 350.00",
             imageRes = R.drawable.antigua
         ),
         ItineraryItem(
             id = 3, day = 2, destination = "Lago de Atitlán",
             description = "Paseo en lancha por los pueblos de San Juan y Santiago Atitlán.",
             restaurant = "El Pescador", hotel = "Hotel Atitlán",
-            transport = "3hrs en bus", price = "Q 600.00",
+            transport = "3hrs en bus", price = "Q 350.00",
             imageRes = R.drawable.atitlan
         ),
         ItineraryItem(
             id = 4, day = 2, destination = "Tikal",
             description = "Exploración de la cuna de la civilización Maya al amanecer.",
             restaurant = "El Mesón del Jaguar", hotel = "Jungle Lodge Tikal",
-            transport = "Vuelo interno (1hr)", price = "Q 1,200.00",
+            transport = "Vuelo interno (1hr)", price = "Q 450.00",
             imageRes = R.drawable.tikal
         ),
         ItineraryItem(
             id = 5, day = 3, destination = "Semuc Champey",
             description = "Nadado en pozas naturales de color turquesa y cuevas de K'an Ba.",
             restaurant = "Comedor local", hotel = "Hostal El Portal",
-            transport = "8hrs en 4x4", price = "Q 750.00",
+            transport = "8hrs en 4x4", price = "Q 300.00",
             imageRes = R.drawable.semuc_champey
         ),
         ItineraryItem(
             id = 6, day = 3, destination = "Volcán de Pacaya",
             description = "Caminata moderada para observar ríos de lava y paisajes volcánicos.",
             restaurant = "Pizza del Volcán", hotel = "N/A (Tour de día)",
-            transport = "1.5hrs en bus", price = "Q 300.00",
+            transport = "1.5hrs en bus", price = "Q 250.00",
             imageRes = R.drawable.pacaya
         ),
         ItineraryItem(
             id = 7, day = 4, destination = "Monterrico",
             description = "Liberación de tortugas y descanso en playas de arena volcánica.",
             restaurant = "El Pelícano", hotel = "Dos Mundos Pacific",
-            transport = "2.5hrs en auto", price = "Q 550.00",
+            transport = "2.5hrs en auto", price = "Q 350.00",
             imageRes = R.drawable.monterrico
         ),
         ItineraryItem(
             id = 8, day = 4, destination = "Quetzaltenango",
             description = "Visita al Teatro Municipal y baños termales de Fuentes Georginas.",
             restaurant = "Tertulianos", hotel = "Hotel Pensión Bonifaz",
-            transport = "4hrs en bus", price = "Q 400.00",
+            transport = "4hrs en bus", price = "Q 250.00",
             imageRes = R.drawable.xela
         ),
         ItineraryItem(
             id = 9, day = 5, destination = "Río Dulce",
             description = "Recorrido en lancha por el cañón hacia Livingstone.",
             restaurant = "Marimonte", hotel = "Hotel Nana Juana",
-            transport = "5hrs en bus", price = "Q 900.00",
+            transport = "5hrs en bus", price = "Q 400.00",
             imageRes = R.drawable.rio_dulce
         ),
         ItineraryItem(
             id = 10, day = 5, destination = "Castillo de San Felipe",
             description = "Exploración de la fortaleza histórica a orillas del Lago de Izabal.",
             restaurant = "Hotel Catamarán", hotel = "G-Land",
-            transport = "15 min en lancha", price = "Q 200.00",
+            transport = "15 min en lancha", price = "Q 100.00",
             imageRes = R.drawable.castillo_felipe
         )
     )

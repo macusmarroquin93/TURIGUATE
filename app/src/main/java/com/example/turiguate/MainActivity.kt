@@ -48,7 +48,7 @@ class MainActivity : ComponentActivity() {
             TURIGUATETheme(darkTheme = isDarkTheme) {
                 MainApp(
                     isDarkTheme = isDarkTheme,
-                    onToggleTheme = { isDarkTheme = !isDarkTheme }
+                    onToggleTheme = { isDarkTheme = !isDarkTheme },
                 )
             }
         }
