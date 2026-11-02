@@ -10,6 +10,17 @@ import com.example.turiguate.model.ItineraryItem
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
+
+
+data class DetalleItinerarioUiState(
+    val cargando: Boolean = true,
+    val actividades: List<ItineraryItem> = emptyList(),
+    val error: String? = null
+)
 
 class ItinerarioViewModel(
     private val repository: ItinerarioRepository
@@ -21,6 +32,41 @@ class ItinerarioViewModel(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
+
+    fun observarActividades(
+        itinerarioId: Int
+    ): Flow<DetalleItinerarioUiState> {
+        return repository.obtenerActividades(itinerarioId)
+            .map { guardadas ->
+                DetalleItinerarioUiState(
+                    cargando = false,
+                    actividades = guardadas.map { actividad ->
+                        ItineraryItem(
+                            id = actividad.id,
+                            day = actividad.day,
+                            destination = actividad.destination,
+                            description = actividad.description,
+                            restaurant = actividad.restaurant,
+                            hotel = actividad.hotel,
+                            transport = actividad.transport,
+                            price = actividad.price,
+                            imageUrl = actividad.imageUrl
+                        )
+                    }
+                )
+            }
+            .onStart {
+                emit(DetalleItinerarioUiState())
+            }
+            .catch {
+                emit(
+                    DetalleItinerarioUiState(
+                        cargando = false,
+                        error = "No se pudieron cargar las actividades."
+                    )
+                )
+            }
+    }
 
     // Guarda un itinerario sencillo
     fun guardarItinerario(

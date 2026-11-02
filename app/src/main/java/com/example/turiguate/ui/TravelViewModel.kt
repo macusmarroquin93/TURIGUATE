@@ -6,18 +6,19 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.turiguate.data.Category
 import com.example.turiguate.data.LocalCatalog
+import com.example.turiguate.data.RoomTravelRepository
 import com.example.turiguate.data.TravelPlan
-import com.example.turiguate.data.TravelRepository
 import com.example.turiguate.data.filterDestinations
+import com.example.turiguate.data.local.TravelDatabase
 import java.util.UUID
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 data class TravelUiState(
     val query: String = "",
@@ -40,7 +41,9 @@ data class TravelUiState(
 
     val selectedDestinations
         get() = selectedIds.mapNotNull { id ->
-            LocalCatalog.destinations.find { it.id == id }
+            LocalCatalog.destinations.find {
+                it.id == id
+            }
         }
 }
 
@@ -48,15 +51,20 @@ class TravelViewModel(
     application: Application
 ) : AndroidViewModel(application) {
 
-    private val repository = TravelRepository(
-        application.getSharedPreferences(
+    private val repository = RoomTravelRepository(
+        database = TravelDatabase.getInstance(application),
+        legacyPreferences = application.getSharedPreferences(
             "turiguate_plans",
             Context.MODE_PRIVATE
         )
     )
 
     private val _state = MutableStateFlow(TravelUiState())
-    val state: StateFlow<TravelUiState> = _state.asStateFlow()
+
+    val state: StateFlow<TravelUiState> =
+        _state.asStateFlow()
+
+    private var loadJob: Job? = null
 
     init {
         loadPlans()
@@ -65,22 +73,29 @@ class TravelViewModel(
     fun loadPlans() {
         if (_state.value.saving) return
 
+        // Evita mantener varias observaciones simultáneas.
+        loadJob?.cancel()
+
         _state.update {
-            it.copy(loading = true, loadError = null)
+            it.copy(
+                loading = true,
+                loadError = null
+            )
         }
 
-        viewModelScope.launch {
+        loadJob = viewModelScope.launch {
             try {
-                val plans = withContext(Dispatchers.IO) {
-                    repository.loadPlans()
-                }
+                repository.importLegacyPlans()
 
-                _state.update {
-                    it.copy(
-                        savedPlans = plans,
-                        loading = false,
-                        loadError = null
-                    )
+                // Se mantiene observando los cambios de Room.
+                repository.plans.collect { plans ->
+                    _state.update {
+                        it.copy(
+                            savedPlans = plans,
+                            loading = false,
+                            loadError = null
+                        )
+                    }
                 }
             } catch (cancelled: CancellationException) {
                 throw cancelled
@@ -88,7 +103,9 @@ class TravelViewModel(
                 _state.update {
                     it.copy(
                         loading = false,
-                        loadError = "No se pudieron leer los planes guardados."
+                        loadError =
+                            "No se pudieron cargar o importar los planes. " +
+                                    "Intenta nuevamente."
                     )
                 }
             }
@@ -96,29 +113,44 @@ class TravelViewModel(
     }
 
     fun changeQuery(query: String) {
-        _state.update { it.copy(query = query) }
+        _state.update {
+            it.copy(query = query)
+        }
     }
 
     fun changeCategory(category: Category?) {
-        _state.update { it.copy(category = category) }
+        _state.update {
+            it.copy(category = category)
+        }
     }
 
     fun clearFilters() {
         _state.update {
-            it.copy(query = "", category = null)
+            it.copy(
+                query = "",
+                category = null
+            )
         }
     }
 
     fun toggleDestination(id: String) {
         if (_state.value.saving) return
-        if (LocalCatalog.destinations.none { it.id == id }) return
+
+        if (
+            LocalCatalog.destinations.none {
+                it.id == id
+            }
+        ) {
+            return
+        }
 
         _state.update { current ->
-            val selected = if (id in current.selectedIds) {
-                current.selectedIds - id
-            } else {
-                current.selectedIds + id
-            }
+            val selected =
+                if (id in current.selectedIds) {
+                    current.selectedIds - id
+                } else {
+                    current.selectedIds + id
+                }
 
             current.copy(
                 selectedIds = selected,
@@ -131,7 +163,10 @@ class TravelViewModel(
         if (_state.value.saving) return
 
         _state.update {
-            it.copy(planTitle = title.take(80), message = null)
+            it.copy(
+                planTitle = title.take(80),
+                message = null
+            )
         }
     }
 
@@ -139,14 +174,21 @@ class TravelViewModel(
         if (_state.value.saving) return
 
         _state.update {
-            it.copy(days = days.coerceIn(1, 30), message = null)
+            it.copy(
+                days = days.coerceIn(1, 30),
+                message = null
+            )
         }
     }
 
     fun savePlan() {
         val current = _state.value
 
-        if (current.loading || current.saving || current.loadError != null) {
+        if (
+            current.loading ||
+            current.saving ||
+            current.loadError != null
+        ) {
             return
         }
 
@@ -155,41 +197,47 @@ class TravelViewModel(
                 id = UUID.randomUUID().toString(),
                 title = current.planTitle.trim(),
                 days = current.days,
-                destinationIds = current.selectedIds.toList()
+                destinationIds =
+                    current.selectedIds.toList()
             )
         } catch (error: IllegalArgumentException) {
-            _state.update { it.copy(message = error.message) }
+            _state.update {
+                it.copy(message = error.message)
+            }
             return
         }
 
-        // Se actualiza antes de iniciar la coroutine para impedir dobles guardados.
         _state.update {
-            it.copy(saving = true, message = null)
+            it.copy(
+                saving = true,
+                message = null
+            )
         }
 
         viewModelScope.launch {
             try {
-                val plans = withContext(Dispatchers.IO) {
-                    repository.savePlan(plan)
-                }
+                repository.savePlan(plan)
 
+                // La lista de planes se actualiza desde el Flow de Room.
                 _state.update {
                     it.copy(
                         saving = false,
-                        savedPlans = plans,
                         selectedIds = emptyList(),
                         planTitle = "",
-                        message = "Plan guardado en este dispositivo."
+                        message =
+                            "Plan guardado en este dispositivo."
                     )
                 }
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (_: Exception) {
-                // Conservamos el borrador para que el usuario pueda reintentar.
                 _state.update {
                     it.copy(
                         saving = false,
-                        message = "No se pudo guardar. Tu selección se conserva; intenta nuevamente."
+                        message =
+                            "No se pudo guardar. " +
+                                    "Tu selección se conserva; " +
+                                    "intenta nuevamente."
                     )
                 }
             }
