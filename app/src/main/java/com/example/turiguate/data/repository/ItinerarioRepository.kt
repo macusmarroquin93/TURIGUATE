@@ -16,6 +16,13 @@ class ItinerarioRepository(
     val itinerarios: Flow<List<ItinerarioEntity>> =
         itinerarioDao.obtenerItinerarios()
 
+    fun obtenerActividades(
+        itinerarioId: Int
+    ): Flow<List<ActividadEntity>> {
+        return database.actividadDao()
+            .obtenerActividades(itinerarioId)
+    }
+
     suspend fun guardarItinerario(
         itinerario: ItinerarioEntity
     ) {

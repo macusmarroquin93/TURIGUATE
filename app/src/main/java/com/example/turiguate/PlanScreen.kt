@@ -1,36 +1,35 @@
-
 package com.example.turiguate
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.turiguate.data.LocalCatalog
+import com.example.turiguate.ui.TravelUiState
 import com.example.turiguate.ui.viewmodel.ItinerarioViewModel
 import com.example.turiguate.ui.viewmodel.ItinerarioViewModelFactory
-import com.example.turiguate.ui.TravelUiState
-import com.example.turiguate.data.LocalCatalog
 
+// Pantalla de itinerarios guardados en Room.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlanScreen(
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onVerItinerario: (Int, String) -> Unit
 ) {
-    val context = LocalContext.current
-
-    val application =
-        context.applicationContext as TuriguateApplication
+    val application = LocalContext.current.applicationContext
+            as TuriguateApplication
 
     val itinerarioViewModel: ItinerarioViewModel = viewModel(
         factory = ItinerarioViewModelFactory(
@@ -48,9 +47,7 @@ fun PlanScreen(
                     Text("Mis itinerarios")
                 },
                 navigationIcon = {
-                    IconButton(
-                        onClick = onBackClick
-                    ) {
+                    IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector =
                                 Icons.AutoMirrored.Filled.ArrowBack,
@@ -61,22 +58,19 @@ fun PlanScreen(
             )
         }
     ) { paddingValues ->
-
         if (itinerarios.isEmpty()) {
-
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
+                    .padding(paddingValues)
+                    .padding(24.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "Todavía no tienes itinerarios guardados."
                 )
             }
-
         } else {
-
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -84,28 +78,23 @@ fun PlanScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-
                 items(
                     items = itinerarios,
                     key = { itinerario -> itinerario.id }
                 ) { itinerario ->
-
                     Card(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp)
                         ) {
-
                             Text(
                                 text = itinerario.nombre,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
 
-                            Spacer(
-                                modifier = Modifier.height(8.dp)
-                            )
+                            Spacer(modifier = Modifier.height(8.dp))
 
                             Text(
                                 text = "Destino: ${itinerario.destino}"
@@ -119,9 +108,21 @@ fun PlanScreen(
                                 text = "Presupuesto: Q ${itinerario.presupuesto}"
                             )
 
-                            Spacer(
-                                modifier = Modifier.height(12.dp)
-                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Button(
+                                onClick = {
+                                    onVerItinerario(
+                                        itinerario.id,
+                                        itinerario.nombre
+                                    )
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Ver itinerario")
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
 
                             TextButton(
                                 onClick = {
@@ -140,8 +141,7 @@ fun PlanScreen(
     }
 }
 
-
-
+// Pantalla de planificación utilizada por ExploreScreen.
 @OptIn(
     ExperimentalLayoutApi::class,
     ExperimentalMaterial3Api::class
@@ -163,7 +163,11 @@ fun PlanScreen(
         mutableStateOf(listOf("Cultura", "Naturaleza"))
     }
 
-    val budgets = listOf("Bajo costo", "Medio", "Alto")
+    val budgets = listOf(
+        "Bajo costo",
+        "Medio",
+        "Alto"
+    )
 
     val interests = listOf(
         "Aventura",
@@ -185,7 +189,6 @@ fun PlanScreen(
         ),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        // Presentación
         item {
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -204,13 +207,14 @@ fun PlanScreen(
             }
         }
 
-        // Nombre del plan
         item {
             OutlinedTextField(
                 value = state.planTitle,
                 onValueChange = onTitleChange,
                 enabled = !state.saving,
-                label = { Text("Nombre de tu viaje") },
+                label = {
+                    Text("Nombre de tu viaje")
+                },
                 placeholder = {
                     Text("Ejemplo: Vacaciones en Guatemala")
                 },
@@ -220,7 +224,6 @@ fun PlanScreen(
             )
         }
 
-        // Duración
         item {
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -281,7 +284,6 @@ fun PlanScreen(
             }
         }
 
-        // Presupuesto
         item {
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -303,7 +305,9 @@ fun PlanScreen(
                                 selectedBudget = budget
                             },
                             enabled = !state.saving,
-                            label = { Text(budget) },
+                            label = {
+                                Text(budget)
+                            },
                             shape = RoundedCornerShape(24.dp)
                         )
                     }
@@ -311,7 +315,6 @@ fun PlanScreen(
             }
         }
 
-        // Intereses
         item {
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -338,7 +341,9 @@ fun PlanScreen(
                                     }
                             },
                             enabled = !state.saving,
-                            label = { Text(interest) },
+                            label = {
+                                Text(interest)
+                            },
                             shape = RoundedCornerShape(24.dp)
                         )
                     }
@@ -346,7 +351,6 @@ fun PlanScreen(
             }
         }
 
-        // Destinos que vienen del catálogo
         item {
             Column {
                 Text(
@@ -403,7 +407,6 @@ fun PlanScreen(
             }
         }
 
-        // Crear y guardar el plan básico
         item {
             Button(
                 onClick = onSave,
@@ -429,7 +432,6 @@ fun PlanScreen(
             }
         }
 
-        // Planes previamente guardados
         item {
             HorizontalDivider()
         }
@@ -480,10 +482,9 @@ fun PlanScreen(
                     )
 
                     plan.destinationIds.forEachIndexed { index, id ->
-                        val destination =
-                            LocalCatalog.destinations.find {
-                                it.id == id
-                            }
+                        val destination = LocalCatalog.destinations.find {
+                            it.id == id
+                        }
 
                         Text(
                             text = "${index + 1}. " +

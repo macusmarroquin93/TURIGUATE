@@ -33,14 +33,24 @@ class TravelLogicTest {
 
     @Test
     fun emptyQueryKeepsTheCategoryFilter() {
+        val catalogoPrueba = listOf(
+            LocalCatalog.destinations.first { it.id == "atitlan" },
+            LocalCatalog.destinations.first { it.id == "semuc" },
+            LocalCatalog.destinations.first { it.id == "antigua" }
+        )
+
         val results = filterDestinations(
-            destinations = LocalCatalog.destinations,
+            destinations = catalogoPrueba,
             query = "",
             category = Category.NATURE
         )
 
+        assertEquals(
+            setOf("atitlan", "semuc"),
+            results.map { it.id }.toSet()
+        )
+
         assertEquals(2, results.size)
-        assertTrue(results.all { it.category == Category.NATURE })
     }
 
     @Test
