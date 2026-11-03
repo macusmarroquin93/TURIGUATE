@@ -37,8 +37,20 @@ fun Generador(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // Datos de ejemplo en memoria (Inmutables)
-    val itineraryItems = remember(days) { getMockItinerary().take(days * 2) }
+    // Factor de ajuste según el presupuesto seleccionado
+    val budgetMultiplier = remember(budget) {
+        when (budget.lowercase()) {
+            "bajo costo", "bajo" -> 0.75
+            "alto" -> 1.40
+            else -> 1.00
+        }
+    }
+
+    // Datos de ejemplo en memoria adaptados dinámicamente a días y presupuesto
+    val itineraryItems = remember(days, budgetMultiplier) {
+        generateDynamicItinerary(days, budgetMultiplier)
+    }
+
     val totalCost = remember(itineraryItems) {
         itineraryItems.sumOf { item ->
             item.price.replace("Q", "").replace(",", "").trim().toDoubleOrNull() ?: 0.0
@@ -151,8 +163,34 @@ fun Generador(
 }
 
 /**
- * Genera la lista de 10 elementos de prueba para el itinerario.
- * Reorganizado para 5 días (2 actividades por día).
+ * Genera el itinerario dinámicamente para cualquier número de días (ej. 1 a 30 días).
+ */
+private fun generateDynamicItinerary(days: Int, multiplier: Double): List<ItineraryItem> {
+    val templates = getMockItinerary()
+    val result = mutableListOf<ItineraryItem>()
+    var counter = 0
+
+    for (day in 1..days) {
+        repeat(2) {
+            val template = templates[counter % templates.size]
+            val basePrice = template.price.replace("Q", "").replace(",", "").trim().toDoubleOrNull() ?: 0.0
+            val adjustedPrice = basePrice * multiplier
+
+            result.add(
+                template.copy(
+                    id = counter + 1,
+                    day = day,
+                    price = "Q %,.2f".format(adjustedPrice)
+                )
+            )
+            counter++
+        }
+    }
+    return result
+}
+
+/**
+ * Genera la lista de 10 elementos de plantilla para el itinerario.
  */
 private fun getMockItinerary(): List<ItineraryItem> {
     return listOf(
