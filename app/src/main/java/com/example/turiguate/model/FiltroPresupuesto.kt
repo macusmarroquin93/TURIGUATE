@@ -11,13 +11,41 @@ fun filtrarPorPresupuesto(
         else -> return emptyList()
     }
 
-    return destinos.filter { destino ->
-        val precio = destino.price
-            .replace("Q", "")
-            .replace(",", "")
-            .trim()
-            .toDoubleOrNull()
+    return destinos.mapNotNull { destino ->
+        val costos = obtenerCostosItinerario(
+            item = destino,
+            presupuesto = presupuesto
+        ) ?: return@mapNotNull null
 
-        precio != null && precio >= 0 && precio <= limite
+        if (costos.total > limite) {
+            return@mapNotNull null
+        }
+
+        destino.copy(
+            price = formatearQuetzales(costos.total),
+
+            // Son tipos de servicio orientativos;
+            // no son cotizaciones de establecimientos específicos.
+            restaurant = when (presupuesto) {
+                "Bajo costo" -> "Comedor o mercado local"
+                "Medio" -> "Restaurante de precio medio"
+                else -> "Restaurante de categoría superior"
+            },
+
+            hotel = when (presupuesto) {
+                "Bajo costo" -> "Hostal o alojamiento económico"
+                "Medio" -> "Hotel de precio medio"
+                else -> "Hotel de categoría superior"
+            },
+
+            transport = if (
+                destino.transport.isBlank() ||
+                destino.transport == "Por definir"
+            ) {
+                "A coordinar; costo no incluido"
+            } else {
+                destino.transport
+            }
+        )
     }
 }

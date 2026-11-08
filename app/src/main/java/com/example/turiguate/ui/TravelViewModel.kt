@@ -175,7 +175,7 @@ class TravelViewModel(
 
         _state.update {
             it.copy(
-                days = days.coerceIn(1, 30),
+                days = days.coerceIn(1, 90),
                 message = null
             )
         }

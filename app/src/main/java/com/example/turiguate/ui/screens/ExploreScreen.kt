@@ -5,12 +5,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -25,10 +26,12 @@ import coil.compose.AsyncImage
 import com.example.turiguate.PlanScreen
 import com.example.turiguate.R
 import com.example.turiguate.data.Category
+import com.example.turiguate.data.DailyCosts
 import com.example.turiguate.data.Destination
 import com.example.turiguate.data.LocalCatalog
 import com.example.turiguate.ui.TravelUiState
 import com.example.turiguate.ui.TravelViewModel
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,14 +46,19 @@ fun ExploreScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("TuriGuate") },
+                title = {
+                    Text("TuriGuate")
+                },
                 navigationIcon = {
                     if (route != "catalog") {
                         IconButton(
-                            onClick = { navController.popBackStack() }
+                            onClick = {
+                                navController.popBackStack()
+                            }
                         ) {
                             Icon(
-                                Icons.Default.ArrowBack,
+                                imageVector =
+                                    Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Volver"
                             )
                         }
@@ -72,11 +80,13 @@ fun ExploreScreen(
                     },
                     icon = {
                         Icon(
-                            Icons.Default.Search,
+                            imageVector = Icons.Default.Search,
                             contentDescription = null
                         )
                     },
-                    label = { Text("Explorar") }
+                    label = {
+                        Text("Explorar")
+                    }
                 )
 
                 NavigationBarItem(
@@ -88,7 +98,7 @@ fun ExploreScreen(
                     },
                     icon = {
                         Icon(
-                            Icons.Default.List,
+                            imageVector = Icons.Default.List,
                             contentDescription = null
                         )
                     },
@@ -150,11 +160,13 @@ fun ExploreScreen(
                 }
 
                 composable("detail/{id}") { backStackEntry ->
-                    val id = backStackEntry.arguments?.getString("id")
+                    val id =
+                        backStackEntry.arguments?.getString("id")
 
-                    val destination = LocalCatalog.destinations.find {
-                        it.id == id
-                    }
+                    val destination =
+                        LocalCatalog.destinations.find {
+                            it.id == id
+                        }
 
                     if (destination == null) {
                         Text(
@@ -164,7 +176,8 @@ fun ExploreScreen(
                     } else {
                         DestinationDetailScreen(
                             destination = destination,
-                            selected = destination.id in state.selectedIds,
+                            selected =
+                                destination.id in state.selectedIds,
                             enabled = !state.saving,
                             onToggleSelection = {
                                 model.toggleDestination(destination.id)
@@ -225,7 +238,9 @@ private fun CatalogScreen(
             OutlinedTextField(
                 value = state.query,
                 onValueChange = onQueryChange,
-                label = { Text("Buscar por nombre") },
+                label = {
+                    Text("Buscar por nombre")
+                },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -238,29 +253,43 @@ private fun CatalogScreen(
                 item {
                     FilterChip(
                         selected = state.category == null,
-                        onClick = { onCategoryChange(null) },
-                        label = { Text("Todas") }
+                        onClick = {
+                            onCategoryChange(null)
+                        },
+                        label = {
+                            Text("Todas")
+                        }
                     )
                 }
 
                 items(Category.values().toList()) { category ->
                     FilterChip(
                         selected = state.category == category,
-                        onClick = { onCategoryChange(category) },
-                        label = { Text(category.label) }
+                        onClick = {
+                            onCategoryChange(category)
+                        },
+                        label = {
+                            Text(category.label)
+                        }
                     )
                 }
             }
         }
 
         item {
-            Text("${state.visibleDestinations.size} destinos encontrados")
+            Text(
+                text =
+                    "${state.visibleDestinations.size} destinos encontrados"
+            )
         }
 
         if (state.visibleDestinations.isEmpty()) {
             item {
                 Column {
-                    Text("No hay destinos con esta búsqueda y categoría.")
+                    Text(
+                        text =
+                            "No hay destinos con esta búsqueda y categoría."
+                    )
 
                     TextButton(onClick = onClearFilters) {
                         Text("Limpiar filtros")
@@ -274,7 +303,9 @@ private fun CatalogScreen(
             key = { it.id }
         ) { destination ->
             Card(
-                onClick = { onDestinationClick(destination.id) },
+                onClick = {
+                    onDestinationClick(destination.id)
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 DestinationIllustration(destination)
@@ -289,7 +320,28 @@ private fun CatalogScreen(
                     )
 
                     Text(
-                        "${destination.department} · ${destination.category.label}"
+                        text = "${destination.department} · " +
+                                destination.category.label
+                    )
+
+                    Text(
+                        text = formatQuetzales(
+                            destination.dailyCosts.total
+                        ),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Text(
+                        text = "Aproximado por persona al día",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    Text(
+                        text = "Comida, estadía y actividades",
+                        style = MaterialTheme.typography.bodySmall,
+                        color =
+                            MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     if (destination.id in state.selectedIds) {
@@ -299,7 +351,11 @@ private fun CatalogScreen(
                         )
                     }
 
-                    Text("Ver detalle")
+                    Text(
+                        text = "Ver destino y desglose de costos",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
             }
         }
@@ -331,11 +387,23 @@ private fun DestinationDetailScreen(
         }
 
         item {
-            Text("${destination.department} · ${destination.category.label}")
+            Text(
+                text = "${destination.department} · " +
+                        destination.category.label
+            )
         }
 
         item {
-            Text(destination.description)
+            Text(
+                text = destination.description,
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+
+        item {
+            DailyCostsCard(
+                costs = destination.dailyCosts
+            )
         }
 
         item {
@@ -345,7 +413,7 @@ private fun DestinationDetailScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    if (selected) {
+                    text = if (selected) {
                         "Quitar de mi plan"
                     } else {
                         "Agregar a mi plan"
@@ -366,6 +434,111 @@ private fun DestinationDetailScreen(
 }
 
 @Composable
+private fun DailyCostsCard(
+    costs: DailyCosts
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "Presupuesto aproximado",
+                style = MaterialTheme.typography.titleLarge
+            )
+
+            Text(
+                text = "Por persona al día, en quetzales",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            HorizontalDivider()
+
+            DailyCostRow(
+                label = "Comida",
+                amount = costs.food
+            )
+
+            DailyCostRow(
+                label = "Estadía (una noche)",
+                amount = costs.accommodation
+            )
+
+            DailyCostRow(
+                label = "Actividades",
+                amount = costs.activities
+            )
+
+            HorizontalDivider()
+
+            DailyCostRow(
+                label = "Total diario",
+                amount = costs.total,
+                emphasized = true
+            )
+
+            Text(
+                text = "Montos de ejemplo, pendientes de verificar. " +
+                        "La estadía corresponde a una noche por persona. " +
+                        "No incluye transporte. Los costos pueden variar " +
+                        "según la temporada, el hospedaje y las " +
+                        "actividades elegidas.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun DailyCostRow(
+    label: String,
+    amount: Double,
+    emphasized: Boolean = false
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier.weight(1f),
+            style = if (emphasized) {
+                MaterialTheme.typography.titleMedium
+            } else {
+                MaterialTheme.typography.bodyLarge
+            }
+        )
+
+        Text(
+            text = formatQuetzales(amount),
+            style = if (emphasized) {
+                MaterialTheme.typography.titleMedium
+            } else {
+                MaterialTheme.typography.bodyLarge
+            },
+            color = if (emphasized) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            }
+        )
+    }
+}
+
+private fun formatQuetzales(
+    amount: Double
+): String = String.format(
+    Locale.US,
+    "Q%,.2f",
+    amount
+)
+
+@Composable
 private fun DestinationIllustration(
     destination: Destination
 ) {
@@ -373,7 +546,8 @@ private fun DestinationIllustration(
         painterResource(R.drawable.destination_landscape)
 
     AsyncImage(
-        model = "file:///android_asset/destinations/${destination.id}.jpg",
+        model =
+            "file:///android_asset/destinations/${destination.id}.jpg",
         contentDescription = "Fotografía de ${destination.name}",
         placeholder = fallbackImage,
         error = fallbackImage,
@@ -383,4 +557,3 @@ private fun DestinationIllustration(
             .height(180.dp)
     )
 }
-

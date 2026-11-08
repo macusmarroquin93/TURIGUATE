@@ -270,7 +270,7 @@ fun PlanScreen(
                             onClick = {
                                 onDaysChange(state.days + 1)
                             },
-                            enabled = state.days < 30 && !state.saving,
+                            enabled = state.days < 90 && !state.saving,
                             contentPadding = PaddingValues(12.dp),
                             shape = RoundedCornerShape(12.dp)
                         ) {
