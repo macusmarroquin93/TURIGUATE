@@ -297,74 +297,63 @@ fun DayStepper(
     onDecrement: () -> Unit
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(
-            alpha = 0.3f
-        ),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth()
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(
+            alpha = 0.4f
+        )
     ) {
-
         Row(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-
-            // Disminuir días
-            IconButton(
-                onClick = onDecrement,
-                modifier = Modifier.background(
-                    Color.White,
-                    RoundedCornerShape(12.dp)
-                )
-            ) {
-                Box(
-                    modifier = Modifier.size(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .width(14.dp)
-                            .height(2.dp)
-                            .background(LocalContentColor.current)
-                    )
-                }
-            }
-
-            // Cantidad de días
-            Row(
-                verticalAlignment = Alignment.CenterVertically
+            OutlinedButton(
+                onClick = {
+                    if (count > 1) {
+                        onDecrement()
+                    }
+                },
+                enabled = count > 1,
+                contentPadding = PaddingValues(12.dp),
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
-                    text = count.toString(),
-                    style = MaterialTheme.typography.headlineMedium,
+                    text = "−",
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "$count días",
+                    style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
                 )
 
-                Spacer(
-                    modifier = Modifier.width(8.dp)
-                )
-
                 Text(
-                    text = "días",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium
+                    text = "De 1 a 90 días",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            // Aumentar días
-            IconButton(
-                onClick = onIncrement,
-                modifier = Modifier.background(
-                    MaterialTheme.colorScheme.primary,
-                    RoundedCornerShape(12.dp)
-                )
+            Button(
+                onClick = {
+                    if (count < 90) {
+                        onIncrement()
+                    }
+                },
+                enabled = count < 90,
+                contentPadding = PaddingValues(12.dp),
+                shape = RoundedCornerShape(12.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Más",
-                    tint = Color.White
+                Text(
+                    text = "+",
+                    style = MaterialTheme.typography.titleLarge
                 )
             }
         }

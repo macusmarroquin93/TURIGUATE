@@ -1,7 +1,8 @@
 package com.example.turiguate.data
 
-
 import java.text.Normalizer
+import java.util.Locale
+
 enum class Category(val label: String) {
     CULTURE("Cultura"),
     NATURE("Naturaleza"),
@@ -9,12 +10,34 @@ enum class Category(val label: String) {
     BEACH("Playa")
 }
 
+data class DailyCosts(
+    val food: Double,
+    val accommodation: Double,
+    val activities: Double
+) {
+    init {
+        require(food.isFinite() && food >= 0.0) {
+            "El costo de comida debe ser un número válido mayor o igual a cero."
+        }
+        require(accommodation.isFinite() && accommodation >= 0.0) {
+            "El costo de estadía debe ser un número válido mayor o igual a cero."
+        }
+        require(activities.isFinite() && activities >= 0.0) {
+            "El costo de actividades debe ser un número válido mayor o igual a cero."
+        }
+    }
+
+    val total: Double
+        get() = food + accommodation + activities
+}
+
 data class Destination(
     val id: String,
     val name: String,
     val department: String,
     val category: Category,
-    val description: String
+    val description: String,
+    val dailyCosts: DailyCosts
 )
 
 data class TravelPlan(
@@ -24,11 +47,15 @@ data class TravelPlan(
     val destinationIds: List<String>
 ) {
     init {
-        require(id.isNotBlank()) { "El plan necesita un identificador." }
+        require(id.isNotBlank()) {
+            "El plan necesita un identificador."
+        }
         require(title.isNotBlank() && title.length <= 80) {
             "El nombre debe tener entre 1 y 80 caracteres."
         }
-        require(days in 1..30) { "El viaje debe durar entre 1 y 30 días." }
+        require(days in 1..90) {
+            "El viaje debe durar entre 1 y 90 días."
+        }
         require(destinationIds.isNotEmpty()) {
             "Selecciona al menos un destino."
         }
@@ -42,6 +69,10 @@ data class TravelPlan(
 }
 
 object LocalCatalog {
+
+    // Valores de ejemplo en quetzales por persona al día.
+    // Estadía: una noche por persona.
+    // No incluyen transporte ni representan tarifas verificadas.
     val destinations = listOf(
         Destination(
             id = "antigua",
@@ -50,7 +81,12 @@ object LocalCatalog {
             category = Category.CULTURE,
             description = "Recorre calles empedradas, plazas y edificios " +
                     "coloniales. Una opción para disfrutar de historia, " +
-                    "arquitectura y cultura."
+                    "arquitectura y cultura.",
+            dailyCosts = DailyCosts(
+                food = 100.0,
+                accommodation = 175.0,
+                activities = 75.0
+            )
         ),
         Destination(
             id = "tikal",
@@ -58,7 +94,12 @@ object LocalCatalog {
             department = "Petén",
             category = Category.CULTURE,
             description = "Explora una antigua ciudad maya rodeada de selva. " +
-                    "Descubre sus templos, plazas y patrimonio arqueológico."
+                    "Descubre sus templos, plazas y patrimonio arqueológico.",
+            dailyCosts = DailyCosts(
+                food = 100.0,
+                accommodation = 150.0,
+                activities = 150.0
+            )
         ),
         Destination(
             id = "atitlan",
@@ -66,7 +107,12 @@ object LocalCatalog {
             department = "Sololá",
             category = Category.NATURE,
             description = "Disfruta del paisaje del lago y conoce los pueblos " +
-                    "de sus alrededores, entre montañas y volcanes."
+                    "de sus alrededores, entre montañas y volcanes.",
+            dailyCosts = DailyCosts(
+                food = 90.0,
+                accommodation = 150.0,
+                activities = 100.0
+            )
         ),
         Destination(
             id = "semuc",
@@ -74,7 +120,12 @@ object LocalCatalog {
             department = "Alta Verapaz",
             category = Category.NATURE,
             description = "Descubre pozas naturales y senderos rodeados " +
-                    "de vegetación en un paisaje de aguas turquesas."
+                    "de vegetación en un paisaje de aguas turquesas.",
+            dailyCosts = DailyCosts(
+                food = 80.0,
+                accommodation = 125.0,
+                activities = 100.0
+            )
         ),
         Destination(
             id = "pacaya",
@@ -82,7 +133,12 @@ object LocalCatalog {
             department = "Escuintla",
             category = Category.ADVENTURE,
             description = "Conoce paisajes volcánicos y senderos de montaña. " +
-                    "Consulta las condiciones de acceso antes de organizar la visita."
+                    "Consulta las condiciones de acceso antes de organizar la visita.",
+            dailyCosts = DailyCosts(
+                food = 80.0,
+                accommodation = 125.0,
+                activities = 150.0
+            )
         ),
         Destination(
             id = "monterrico",
@@ -90,7 +146,12 @@ object LocalCatalog {
             department = "Santa Rosa",
             category = Category.BEACH,
             description = "Disfruta de la costa del Pacífico, sus playas " +
-                    "de arena oscura y sus paisajes costeros."
+                    "de arena oscura y sus paisajes costeros.",
+            dailyCosts = DailyCosts(
+                food = 100.0,
+                accommodation = 175.0,
+                activities = 75.0
+            )
         ),
         Destination(
             id = "quirigua",
@@ -98,7 +159,12 @@ object LocalCatalog {
             department = "Izabal",
             category = Category.CULTURE,
             description = "Conoce un sitio arqueológico maya reconocido " +
-                    "por sus estelas talladas y su historia."
+                    "por sus estelas talladas y su historia.",
+            dailyCosts = DailyCosts(
+                food = 75.0,
+                accommodation = 125.0,
+                activities = 60.0
+            )
         ),
         Destination(
             id = "lachua",
@@ -106,7 +172,12 @@ object LocalCatalog {
             department = "Alta Verapaz",
             category = Category.NATURE,
             description = "Descubre una laguna rodeada de bosque tropical. " +
-                    "Una opción para apreciar paisajes y observar la naturaleza."
+                    "Una opción para apreciar paisajes y observar la naturaleza.",
+            dailyCosts = DailyCosts(
+                food = 75.0,
+                accommodation = 100.0,
+                activities = 100.0
+            )
         ),
         Destination(
             id = "rio_dulce",
@@ -114,7 +185,12 @@ object LocalCatalog {
             department = "Izabal",
             category = Category.NATURE,
             description = "Conoce paisajes de río, vegetación tropical " +
-                    "y recorridos por el agua en la región de Izabal."
+                    "y recorridos por el agua en la región de Izabal.",
+            dailyCosts = DailyCosts(
+                food = 100.0,
+                accommodation = 150.0,
+                activities = 125.0
+            )
         ),
         Destination(
             id = "biotopo",
@@ -122,7 +198,12 @@ object LocalCatalog {
             department = "Baja Verapaz",
             category = Category.NATURE,
             description = "Recorre senderos de bosque nuboso y descubre " +
-                    "un espacio dedicado a la conservación del hábitat del quetzal."
+                    "un espacio dedicado a la conservación del hábitat del quetzal.",
+            dailyCosts = DailyCosts(
+                food = 75.0,
+                accommodation = 125.0,
+                activities = 60.0
+            )
         ),
         Destination(
             id = "acatenango",
@@ -131,7 +212,12 @@ object LocalCatalog {
             category = Category.ADVENTURE,
             description = "Un destino de montaña para caminatas exigentes. " +
                     "Planifica la visita con preparación, acompañamiento " +
-                    "y revisión de las condiciones locales."
+                    "y revisión de las condiciones locales.",
+            dailyCosts = DailyCosts(
+                food = 100.0,
+                accommodation = 150.0,
+                activities = 250.0
+            )
         ),
         Destination(
             id = "el_paredon",
@@ -139,7 +225,12 @@ object LocalCatalog {
             department = "Escuintla",
             category = Category.BEACH,
             description = "Conoce una comunidad costera del Pacífico, " +
-                    "sus playas y su ambiente relacionado con el surf."
+                    "sus playas y su ambiente relacionado con el surf.",
+            dailyCosts = DailyCosts(
+                food = 100.0,
+                accommodation = 175.0,
+                activities = 125.0
+            )
         )
     )
 }
@@ -147,7 +238,7 @@ object LocalCatalog {
 private fun String.normalized(): String =
     Normalizer.normalize(trim(), Normalizer.Form.NFD)
         .replace("\\p{M}+".toRegex(), "")
-        .lowercase(java.util.Locale.ROOT)
+        .lowercase(Locale.ROOT)
 
 fun filterDestinations(
     destinations: List<Destination>,

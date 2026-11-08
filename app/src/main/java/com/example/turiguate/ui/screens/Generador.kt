@@ -25,6 +25,8 @@ import kotlinx.coroutines.launch
 import com.example.turiguate.model.PreferenciasViaje
 import com.example.turiguate.model.filtrarPorIntereses
 import com.example.turiguate.model.filtrarPorPresupuesto
+import com.example.turiguate.model.formatearQuetzales
+import com.example.turiguate.model.obtenerCostosItinerario
 
 /**
  * Pantalla Generador.
@@ -64,7 +66,7 @@ fun Generador(
     // Actividades
     val opciones = remember(preferencias) {
         val destinosPorInteres = filtrarPorIntereses(
-            destinos = getMockItinerary(),
+            destinos = getBaseItinerary(),
             intereses = preferencias.intereses
         )
 
@@ -92,17 +94,20 @@ fun Generador(
                 } else {
                     val ultimoDestino = orden.last()
 
+                    // Si faltan destinos para completar el viaje,
+                    // se agrega otro día en el último lugar.
+                    // Conserva sus costos, imagen y hospedaje.
                     ultimoDestino.copy(
                         id = indice + 1,
                         day = indice + 1,
                         destination =
-                            "Tiempo libre en ${ultimoDestino.destination}",
+                            "Día adicional en ${ultimoDestino.destination}",
                         description =
-                            "Día libre para descansar o elegir actividades por tu cuenta.",
-                        restaurant = "A elección",
-                        hotel = "Por definir",
-                        transport = "Según la actividad elegida",
-                        price = "Por definir"
+                            "Continúa tu estancia en este destino. " +
+                                    "Se mantiene el presupuesto diario de comida, " +
+                                    "estadía y actividades.",
+                        transport =
+                            "Permanencia en el destino; transporte no incluido"
                     )
                 }
             }
@@ -357,7 +362,7 @@ fun Generador(
  **
  */
 
-private fun getMockItinerary(): List<ItineraryItem> {
+private fun getBaseItinerary(): List<ItineraryItem> {
     return listOf(
         ItineraryItem(
             id = 1,
@@ -367,7 +372,7 @@ private fun getMockItinerary(): List<ItineraryItem> {
             restaurant = "La Posada de Don Rodrigo",
             hotel = "Hotel Casa Santo Domingo",
             transport = "1hr en auto",
-            price = "Q 450.00",
+            price = "",
             imageUrl = "file:///android_asset/destinations/antigua.jpg"
         ),
         ItineraryItem(
@@ -378,7 +383,7 @@ private fun getMockItinerary(): List<ItineraryItem> {
             restaurant = "El Pescador",
             hotel = "Hotel Atitlán",
             transport = "3hrs en bus",
-            price = "Q 600.00",
+            price = "",
             imageUrl = "file:///android_asset/destinations/atitlan.jpg"
         ),
         ItineraryItem(
@@ -389,7 +394,7 @@ private fun getMockItinerary(): List<ItineraryItem> {
             restaurant = "El Mesón del Jaguar",
             hotel = "Jungle Lodge Tikal",
             transport = "Vuelo interno (1hr)",
-            price = "Q 1,200.00",
+            price = "",
             imageUrl = "file:///android_asset/destinations/tikal.jpg"
         ),
         ItineraryItem(
@@ -400,7 +405,7 @@ private fun getMockItinerary(): List<ItineraryItem> {
             restaurant = "Por definir",
             hotel = "Por definir",
             transport = "Por definir",
-            price = "Por definir",
+            price = "",
             imageUrl = "file:///android_asset/destinations/quirigua.jpg"
         ),
         ItineraryItem(
@@ -411,7 +416,7 @@ private fun getMockItinerary(): List<ItineraryItem> {
             restaurant = "Comedor local",
             hotel = "Hostal El Portal",
             transport = "8hrs en 4x4",
-            price = "Q 750.00",
+            price = "",
             imageUrl = "file:///android_asset/destinations/semuc.jpg"
         ),
         ItineraryItem(
@@ -422,7 +427,7 @@ private fun getMockItinerary(): List<ItineraryItem> {
             restaurant = "Por definir",
             hotel = "Por definir",
             transport = "Por definir",
-            price = "Por definir",
+            price = "",
             imageUrl = "file:///android_asset/destinations/lachua.jpg"
         ),
         ItineraryItem(
@@ -433,7 +438,7 @@ private fun getMockItinerary(): List<ItineraryItem> {
             restaurant = "Por definir",
             hotel = "Por definir",
             transport = "Por definir",
-            price = "Por definir",
+            price = "",
             imageUrl = "file:///android_asset/destinations/biotopo.jpg"
         ),
         ItineraryItem(
@@ -444,7 +449,7 @@ private fun getMockItinerary(): List<ItineraryItem> {
             restaurant = "Pizza del Volcán",
             hotel = "N/A (Tour de día)",
             transport = "1.5hrs en bus",
-            price = "Q 300.00",
+            price = "",
             imageUrl = "file:///android_asset/destinations/pacaya.jpg"
         ),
         ItineraryItem(
@@ -455,7 +460,7 @@ private fun getMockItinerary(): List<ItineraryItem> {
             restaurant = "Por definir",
             hotel = "Por definir",
             transport = "Por definir",
-            price = "Por definir",
+            price = "",
             imageUrl = "file:///android_asset/destinations/acatenango.jpg"
         ),
         ItineraryItem(
@@ -466,7 +471,7 @@ private fun getMockItinerary(): List<ItineraryItem> {
             restaurant = "El Pelícano",
             hotel = "Dos Mundos Pacific",
             transport = "2.5hrs en auto",
-            price = "Q 550.00",
+            price = "",
             imageUrl = "file:///android_asset/destinations/monterrico.jpg"
         ),
         ItineraryItem(
@@ -477,7 +482,7 @@ private fun getMockItinerary(): List<ItineraryItem> {
             restaurant = "Marimonte",
             hotel = "Hotel Nana Juana",
             transport = "5hrs en bus",
-            price = "Q 900.00",
+            price = "",
             imageUrl = "file:///android_asset/destinations/rio_dulce.jpg"
         ),
         ItineraryItem(
@@ -488,7 +493,7 @@ private fun getMockItinerary(): List<ItineraryItem> {
             restaurant = "Por definir",
             hotel = "Por definir",
             transport = "Por definir",
-            price = "Por definir",
+            price = "",
             imageUrl = "file:///android_asset/destinations/el_paredon.jpg"
         ),
         ItineraryItem(
@@ -499,7 +504,7 @@ private fun getMockItinerary(): List<ItineraryItem> {
             restaurant = "El Aldeano",
             hotel = "Aldea de la Selva",
             transport = "4hrs en bus (desde capital)",
-            price = "Q 850.00",
+            price = "",
             imageUrl = "file:///android_asset/destinations/irtra.jpg"
         ),
         ItineraryItem(
@@ -510,7 +515,7 @@ private fun getMockItinerary(): List<ItineraryItem> {
             restaurant = "Hotel Catamarán",
             hotel = "G-Land",
             transport = "15 min en lancha",
-            price = "Q 200.00",
+            price = "",
             imageUrl = "file:///android_asset/destinations/castillo_san_felipe.jpg"
         ),
         ItineraryItem(
@@ -521,10 +526,51 @@ private fun getMockItinerary(): List<ItineraryItem> {
             restaurant = "Tertulianos",
             hotel = "Hotel Pensión Bonifaz",
             transport = "4hrs en bus",
-            price = "Q 400.00",
+            price = "",
             imageUrl = "file:///android_asset/destinations/quetzaltenango.jpg"
         )
     )
+}
+private fun getMockItinerary(): List<ItineraryItem> {
+    return getBaseItinerary().map { item ->
+        val costos = requireNotNull(
+            obtenerCostosItinerario(item)
+        ) {
+            "Faltan los costos de ${item.destination}"
+        }
+
+        item.copy(
+            price = formatearQuetzales(costos.total),
+
+            restaurant = if (
+                item.restaurant.isBlank() ||
+                item.restaurant == "Por definir"
+            ) {
+                "Comedor local a elección"
+            } else {
+                item.restaurant
+            },
+
+            hotel = if (
+                item.hotel.isBlank() ||
+                item.hotel == "Por definir" ||
+                item.hotel.startsWith("N/A")
+            ) {
+                "Hospedaje local a elección"
+            } else {
+                item.hotel
+            },
+
+            transport = if (
+                item.transport.isBlank() ||
+                item.transport == "Por definir"
+            ) {
+                "A coordinar; costo no incluido"
+            } else {
+                item.transport
+            }
+        )
+    }
 }
 
 @Preview(showBackground = true)
